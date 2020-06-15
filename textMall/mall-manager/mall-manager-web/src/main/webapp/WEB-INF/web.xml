@@ -10,6 +10,7 @@
 		<param-value>classpath:spring/applicationContext*.xml</param-value>
 	</context-param>
 	<!-- 创建listener 来创建spring容器 -->
+	<!-- 提交测试1 2020.6.15 18:06 -->
 	<listener>
 		<listener-class>org.springframework.web.context.ContextLoaderListener</listener-class>
 	</listener>
