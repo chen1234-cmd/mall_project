@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>男装专区</title>
+    <link rel="stylesheet" type="text/css" href="css/loaders.min.css"/>
+    <link rel="stylesheet" type="text/css" href="css/loading.css"/>
+    <link rel="stylesheet" type="text/css" href="css/base.css"/>
+    <link rel="stylesheet" type="text/css" href="css/style.css"/>
+      <script src="js/jquery.min.js" type="text/javascript" charset="utf-8"></script>
+      <script type="text/javascript" src="js/jaliswall.js"></script>
+	  <script src="js/mui.min.js" type="text/javascript" charset="utf-8"></script>
+	  <script src="js/public.js" type="text/javascript" charset="utf-8"></script>
+    <script type="text/javascript">
+    	$(window).load(function(){
+    		$(".loading").addClass("loader-chanage")
+    		$(".loading").fadeOut(300);
+			//加入收藏
+			var checkdata =  localStorage.getItem('MyCollect');
+			var data = JSON.parse(checkdata);
+			console.log(data);
+			for (let i in data) {
+				console.log(data[i].id)
+				str='';
+				str+='<li class="pic">';
+				str+='	<a href="detail.html?id='+data[i].id+'">';
+				str+='		<img src="'+data[i].image+'"/>';
+				str+='		<p>'+data[i].title+'</p>';
+				str+='		<b>￥'+data[i].price+'</b><del>￥'+data[i].price+'</del>';
+				str+='		<div class="collectbar">';
+				str+='			<label for="collect" idd="'+data[i].id+'"  class=""></label>';
+				str+='			<input type="checkbox"  id="collect" />';
+				str+='		</div>';
+				str+='	</a>';
+				str+='</li>';
+				$('.wall').append(str);
+				
+			}
+    		$('.wall').jaliswall({ item: '.pic' });
+    		$(".text-top").on("touchstart",function(){
+    			$(".collectbar").fadeToggle(500);
+    		});
+    		edit();
+			del();
+			function del(){
+				$('#del').click(function(){
+					$('.wall').find('[class=collectd]').each(function(i){
+						var id = $(this).attr('idd');
+						console.log(id)
+						for (var i = 0; i < data.length; i++) {
+							if(data[i].id == id){
+								data.splice(i,1);
+								var strcookie  = JSON.stringify(data);
+								localStorage.setItem('MyCollect',strcookie);
+								//商品删除后页面代码对应删除
+								$(this).parent().parent().parent().remove();
+								console.log(i);
+								console.log(data);
+								break;
+							}
+							
+						}
+					})
+				})
+			}
+    	})
+    	function edit(){
+			$('.collectbar').click(function(){
+				if($(this).find('#collect').is(':checked')){
+					$(this).find('label').addClass("collectd");
+					$(".collectbox").fadeIn(300)
+					$(".kong").fadeIn()
+				}else{
+					$(this).find('label').removeClass("collectd");
+					if($('.wall').find('[class=collectd]').size()==0){
+						$(".collectbox").fadeOut(300)
+						$(".kong").fadeOut()
+					}
+					
+				}
+				
+			})
+		}
+		
+    	
+  //   	function mycheck(val)
+		// {
+		// 	if($("#collect"+val).is(':checked'))
+		// 	{
+		// 		$(".label"+val).addClass("collectd");
+		// 		$(".collectbox").fadeIn(300)
+		// 		$(".kong").fadeIn()
+		// 	}
+		// 	else
+		// 	{
+		// 		$(".label"+val).removeClass("collectd");
+		// 		$(".collectbox").fadeOut(300)
+		// 		$(".kong").fadeOut()
+		// 	}
+		// }
+    	
+    </script>
+</head>
+<!--loading页开始-->
+<div class="loading">
+	<div class="loader">
+        <div class="loader-inner pacman">
+          <div></div>
+          <div></div>
+          <div></div>
+          <div></div>
+          <div></div>
+        </div>
+	</div>
+</div>
+<!--loading页结束-->
+<body>
+	<header class="top-header fixed-header">
+		<a class="icona" href="javascript:history.go(-1)">
+				<img src="images/left.png"/>
+			</a>
+		<h3>我的收藏</h3>
+			
+			<a class="text-top">
+				编辑
+			</a>
+	</header>
+	
+	<div class="contaniner fixed-conta">
+		<div style="margin-top: 3%;"></div>
+		<section class="list">
+			<ul class="wall">
+				<!-- <li class="pic">
+					<a href="detail.html">
+						<img src="images/list-ph01.png"/>
+						<p>韩版青少年休闲修身长袖紧身衬衫</p>
+						<b>￥58</b><del>￥538</del>
+						<div class="collectbar">
+							<label for="collect1"  onselectstart="return false" class="label1"></label>
+							<input type="checkbox" onclick="mycheck(1)" id="collect1"/>
+						</div>
+					</a>
+				</li>
+				<li class="pic">
+					<a href="detail.html">
+						<img src="images/list-ph02.png"/>
+						<p>韩版青少年休闲修身长袖紧身衬衫</p>
+						<b>￥58</b><del>￥538</del>
+						<div class="collectbar">
+							<label for="collect2"  onselectstart="return false" class="label2"></label>
+							<input type="checkbox" onclick="mycheck(2)" id="collect2"/>
+						</div>
+					</a>
+				</li>
+				<li class="pic">
+					<a href="detail.html">
+						<img src="images/list-ph01.png"/>
+						<p>韩版青少年休闲修身长袖紧身衬衫</p>
+						<b>￥58</b><del>￥538</del>
+						<div class="collectbar">
+							<label class="label3" for="collect3" onclick="mycheck(3)" onselectstart="return false"></label>
+							<input type="checkbox" id="collect3"/>
+						</div>
+					</a>
+				</li>
+				<li class="pic">
+					<a href="detail.html">
+						<img src="images/list-ph02.png"/>
+						<p>韩版青少年休闲修身长袖紧身衬衫</p>
+						<b>￥58</b><del>￥538</del>
+						<div class="collectbar">
+							<label class="label4" for="collect4" onselectstart="return false"></label>
+							<input type="checkbox" id="collect4" onclick="mycheck(4)"/>
+						</div>
+					</a>
+				</li> -->
+				
+			</ul>
+		</section>
+		<div class="kong" style="margin-bottom: 16%;"></div>
+	</div>
+	
+<footer class="collectbox fixed-footer">
+	<input type="button" id="del" value="确认删除" />
+</footer>
+
+	
+	
+
+</body>
+</html>

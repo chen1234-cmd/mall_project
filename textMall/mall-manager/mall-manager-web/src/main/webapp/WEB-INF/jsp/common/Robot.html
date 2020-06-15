@@ -1,0 +1,127 @@
+
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title></title>
+	</head>
+	<link rel="stylesheet" href="../js/chat.css" />
+	<script src="js/chat"></script>
+	<body>
+		<img style="width:100%;height:100%" src="~/Images/chatBack.jpg">
+		    <div class="abs cover contaniner">
+		        <div class="abs cover pnl">
+		            <div class="top pnl-head"></div>
+		            <div class="abs cover pnl-body" id="pnlBody">
+		                <div class="abs cover pnl-left">
+		                    <div class="abs cover pnl-msgs scroll" id="show">
+		                        <div class="msg min time" id="histStart">加载历史消息</div>
+		                        <div class="pnl-list" id="hists">
+		                            <!-- 历史消息 -->
+		                        </div>
+		                        <div class="pnl-list" id="msgs">
+		                            <div class="msg robot">
+		                                <div class="msg-left" worker="小龙">
+		                                    <div class="msg-host photo" style="background-image: url(../Images/head.png)"></div>
+		                                    <div class="msg-ball" title="今天 17:52:06">你好，我是只能打字的聊天机器人                <br><br>您是想要了解哪些方面呢？</div>
+		                                </div>
+		                            </div>
+		                            <div class="msg guest">
+		                                <div class="msg-right">
+		                                    <div class="msg-host headDefault"></div>
+		                                    <div class="msg-ball" title="今天 17:52:06">你好</div>
+		                                </div>
+		                            </div>
+		                        </div>
+		                        <div class="pnl-list hide" id="unreadLine">
+		                            <div class="msg min time unread">未读消息</div>
+		                        </div>
+		                    </div>
+		                    <div class="abs bottom pnl-text">
+		                        <div class="abs top pnl-warn" id="pnlWarn">
+		                            <div class="fl btns rel pnl-warn-free">
+		                                <img src="../Images/icon/Smile.png" class="kh warn-btn" title="表情" id="emojiBtn" />
+		                                <img src="../Images/icon/pic.png" class="kh warn-btn" title="截屏" id="emojiBtn" />
+		                                <img src="../Images/icon/camera.png" class="kh warn-btn" title="图片" id="emojiBtn" />
+		                                <img src="../Images/icon/edit.png" class="kh warn-btn" title="保存" id="emojiBtn" />
+		                            </div>
+		                        </div>
+		                        <div class="abs cover pnl-input">
+		                            <textarea class="scroll" id="text" wrap="hard" placeholder="在此输入文字信息..."></textarea>
+		                            <div class="abs atcom-pnl scroll hide" id="atcomPnl">
+		                                <ul class="atcom" id="atcom"></ul>
+		                            </div>
+		                        </div>
+		                        <div class="abs br pnl-btn" id="submit" style="background-color: rgb(32, 196, 202); color: rgb(255, 255, 255);" οnclick="SendMsg()">发送</div>
+		                        <div class="pnl-support" id="copyright"><a href="#">版权什么的</a></div>
+		                    </div>
+		                </div>
+		                <div class="abs right pnl-right">
+		                    <div class="slider-container hide"></div>
+		                    <div class="pnl-right-content">
+		                        <div class="pnl-tabs">
+		                            <div class="tab-btn active" id="hot-tab">常见问题</div>
+		                            <div class="tab-btn" id="rel-tab">相关问题</div>
+		                        </div>
+		                        <div class="pnl-hot">
+		                            <ul class="rel-list unselect" id="hots">
+		                                <!-- <li class="rel-item">这是一个问题，这是一个问题？</li> -->
+		                            </ul>
+		                        </div>
+		                        <div class="pnl-rel" style="display: none;">
+		                            <ul class="rel-list unselect" id="rels">
+		                                <!-- <li class="rel-item">这是一个问题，这是一个问题？</li> -->
+		                            </ul>
+		                        </div>
+		                    </div>
+		                </div>
+		            </div>
+		        </div>
+		    </div>
+		</body>
+		<script>
+			// 发送信息
+			function SendMsg()
+			{
+			    var text = document.getElementById("text");
+			    if (text.value == "" || text.value == null)
+			    {
+			        alert("发送信息为空，请输入！")
+			    }
+			    else
+			    {
+			        AddMsg('default', SendMsgDispose(text.value));
+			        text.value = "";
+			    }
+			}
+			// 发送的信息处理
+			function SendMsgDispose(detail)
+			{
+			    detail = detail.replace("\n", "<br>").replace(" ", "&nbsp;")
+			    return detail;
+			}
+			
+			// 增加信息
+			function AddMsg(user,content)
+			{
+			    var str = CreadMsg(user, content);
+			    var msgs = document.getElementById("msgs");
+			    msgs.innerHTML = msgs.innerHTML + str;
+			}
+			
+			// 生成内容
+			function CreadMsg(user, content)
+			{
+			    var str = "";
+			    if(user == 'default')
+			    {
+			        str = "<div class=\"msg guest\"><div class=\"msg-right\"><div class=\"msg-host headDefault\"></div><div class=\"msg-ball\" title=\"今天 17:52:06\">" + content +"</div></div></div>"
+			    }
+			    else
+			    {
+			        str = "<div class=\"msg robot\"><div class=\"msg-left\" worker=\"" + user + "\"><div class=\"msg-host photo\" style=\"background-image: url(../Images/head.png)\"></div><div class=\"msg-ball\" title=\"今天 17:52:06\">" + content + "</div></div></div>";
+			    }
+			    return str;
+			}
+		</script>
+</html>

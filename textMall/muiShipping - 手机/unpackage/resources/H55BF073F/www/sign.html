@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>修改密码</title>
+    <link rel="stylesheet" type="text/css" href="css/loaders.min.css"/>
+    <link rel="stylesheet" type="text/css" href="css/loading.css"/>
+    <link rel="stylesheet" type="text/css" href="css/base.css"/>
+    <link rel="stylesheet" type="text/css" href="css/style.css"/>
+      <script src="js/jquery.min.js" type="text/javascript" charset="utf-8"></script>
+	  <script src="js/mui.min.js" type="text/javascript" charset="utf-8"></script>
+	  <script src="js/public.js" type="text/javascript" charset="utf-8"></script>
+    <script type="text/javascript">
+    	$(window).load(function(){
+    		$(".loading").addClass("loader-chanage");
+    		$(".loading").fadeOut(300)
+			msgBox();
+			
+			/* 判断是否登录 */
+			var token = localStorage.getItem('token');
+			console.log(token);
+			var userId;
+			mui.ajax('http://'+getIp()+':8891/rest/user/token/'+token,{
+				data:{
+					
+				},
+				dataType:'json',//服务器返回json格式数据
+				type:'post',//HTTP请求类型
+				timeout:10000,//超时时间设置为10秒；
+				success:function(resp){
+					var data = resp.data;
+					console.log(data);
+					if (resp.status == 200) {
+						userId = data.id;
+						console.log(userId)
+						okload();
+					} else{
+						$('#login').click(function(){
+							location.href = 'login.html';
+						})
+						$('a').not($('.page-footer').find('a')).click(function(){
+							$('a').not($('.p-top').find('a')).click(function(){
+								$('#msg').html('请先登录！');
+								$('#msg').show(0);
+								$('#msg').delay(1000).hide(0);
+							})
+							return false;
+						})
+						
+						
+					}
+				},
+				error:function(xhr,type,errorThrown){
+					console.log(type);
+				}
+			});
+			
+			function okload(){
+				$('#submit').click(function(){
+					var oldpass = $('[name=oldpass]').val();
+					var password = $('[name=password]').val();
+					var repwd = $('[name=repwd]').val();
+					
+					if(oldpass != password){
+						
+						if(oldpass!=''&&password!=''&&repwd!=''){
+							if(password==repwd){
+								mui.ajax('http://'+getIp()+':8891/rest/user/updatePass',{
+									data:{
+										id:userId,
+										password:password,
+										oldpass:oldpass
+									},
+									dataType:'json',//服务器返回json格式数据
+									type:'post',//HTTP请求类型
+									timeout:10000,//超时时间设置为10秒；
+									success:function(resp){
+										var data = resp.data;
+										if(resp.status == 200){
+											$('#msg').html('修改成功！');
+											$('#msg').show(0);
+											$('#msg').delay(1000).hide(0);
+											localStorage.removeItem('token');
+											setInterval(function(){
+												location.href = 'self.html';
+											}, 1000);
+										}else{
+											$('#msg').html('密码错误！');
+											$('#msg').show(0);
+											$('#msg').delay(1000).hide(0);
+										}
+									},
+									error:function(xhr,type,errorThrown){
+										
+									}
+								});
+							}else{
+								$('#msg').html('两次密码不一样！');
+								$('#msg').show(0);
+								$('#msg').delay(1000).hide(0);
+							}
+						}else{
+							$('#msg').html('请填写完整！');
+							$('#msg').show(0);
+							$('#msg').delay(1000).hide(0);
+						}
+					}else{
+						$('#msg').html('不能于原密码相同！');
+						$('#msg').show(0);
+						$('#msg').delay(1000).hide(0);
+					}
+				})
+			}
+			
+			
+    	});
+		
+		
+    </script>
+    
+</head>
+<!--loading页开始-->
+<div class="loading">
+	<div class="loader">
+        <div class="loader-inner pacman">
+          <div></div>
+          <div></div>
+          <div></div>
+          <div></div>
+          <div></div>
+        </div>
+	</div>
+</div>
+<!--loading页结束-->
+<body>
+	<header class="top-header">
+		<a class="text texta" href="javascript:history.go(-1)">返回</a>
+		<h3>修改密码</h3>
+		<a href="" style="width: 50px;"></a>
+	</header>
+	
+	<div class="login">
+		<form action="" onsubmit="return false" method="post">
+			
+			<ul>
+				<li>
+					<img src="images/login.png"/>
+					<input type="text" name="oldpass" placeholder="输入原密码"/>
+				</li>
+				<li>
+					<img src="images/password.png"/>
+					<input type="password" name="password" placeholder="输入新密码"/>
+				</li>
+				<li>
+					<img src="images/password.png"/>
+					<input type="password" name="repwd" placeholder="输入确认密码"/>
+				</li>
+			</ul>
+			<input type="submit" id="submit" value="立即修改"/>
+		</form>
+	</div>
+
+</body>
+
+
+</html>

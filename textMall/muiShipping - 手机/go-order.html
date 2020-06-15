@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="format-detection" content="telephone=no" />
+    <title>男装专区</title>
+    <link rel="stylesheet" type="text/css" href="css/loaders.min.css"/>
+    <link rel="stylesheet" type="text/css" href="css/loading.css"/>
+    <link rel="stylesheet" type="text/css" href="css/base.css"/>
+    <link rel="stylesheet" type="text/css" href="css/style.css"/>
+    <script src="js/jquery.min.js" type="text/javascript" charset="utf-8"></script>
+	<script src="js/mui.min.js" type="text/javascript" charset="utf-8"></script>
+	<script src="js/public.js" type="text/javascript" charset="utf-8"></script>
+	<style type="text/css">
+		.titleHide{
+			height: 43px;
+			overflow:hidden;
+		}
+	</style>
+    <script type="text/javascript">
+    	$(window).load(function(){
+    		$(".loading").addClass("loader-chanage")
+    		$(".loading").fadeOut(300)
+			//获取地址栏orderId参数值
+			var orderId =parseInt( GetQueryValue('orderId'));
+			console.log(orderId);
+			/* 获取已登录用户信息 */
+			var token = localStorage.getItem('token');
+			console.log(token);
+			var userId;
+			mui.ajax('http://'+getIp()+':8891/rest/user/token/'+token,{
+				data:{
+					
+				},
+				dataType:'json',//服务器返回json格式数据
+				type:'post',//HTTP请求类型
+				timeout:10000,//超时时间设置为10秒；
+				success:function(resp){
+					var data = resp.data;
+					console.log(data);
+					if (resp.status == 200) {
+						userId = data.id;
+						orderload();
+					} else{
+						$('a').click(function(){
+							
+							$('#msg').html('请先登录！');
+							$('#msg').show(0);
+							$('#msg').delay(1000).hide(0);
+							setInterval(function(){
+								location.href='login.html';
+							}, 1000);
+							return false;
+						})
+					}
+				},
+				error:function(xhr,type,errorThrown){
+					console.log(type);
+				}
+			});
+			
+			function orderload(){
+				mui.ajax('http://'+getIp()+':8894/order/getOrderByOrderId',{
+					data:{
+						orderId:orderId
+					},
+					dataType:'json',//服务器返回json格式数据
+					type:'post',//HTTP请求类型
+					timeout:10000,//超时时间设置为10秒；
+					success:function(resp){
+						var data = resp.data;
+						console.log(data)
+						str='';
+						str+='<h3>';
+						switch (data.status){
+							case 1:
+								str+='	<img src="images/b-iocn03.png"/>';
+								str+='	<span>待付款</span>';
+								break;
+							case 2:case 3:
+								str+='	<img src="images/b-iocn01.png"/>';
+								str+='	<span>待发货</span>';
+								break;
+							case 4:
+								str+='	<img src="images/b-iocn04.png"/>';
+								str+='	<span>待收货</span>';
+								break;
+							case 5:
+								if(data.buyerRate==0){
+									str+='	<img src="images/b-iocn02.png"/>';
+									str+='	<span>待评价</span>';
+								}else{
+									str+='	<img src="images/a-icon04.png"/>';
+									str+='	<span>交易完成</span>';
+								}
+								
+								break;
+							case 6:
+								str+='	<img src="images/b-iocn02.png"/>';
+								str+='	<span>订单取消</span>';
+								break;
+							case 7:
+								str+='	<img src="images/b-iocn02.png"/>';
+								str+='	<span>申请退款中，请耐心等待</span>';
+								break;
+							default:
+								break;
+						}
+						
+						str+='</h3>';
+						str+='<dl class="map">';
+						str+='	<dt><img src="images/a-icon02.png"/></dt>';
+						str+='	<dd>';
+						str+='		<span>'+data.orderShipping.receiverName+'</span>';
+						str+='		<small>'+data.orderShipping.receiverMobile+'</small>';
+						str+='		<p>'+data.orderShipping.receiverState+'';
+						str+='		'+data.orderShipping.receiverCity+'';
+						str+='		'+data.orderShipping.receiverDistrict+'';
+						str+='		'+data.orderShipping.receiverAddress+'</p>';
+						str+='	</dd>';
+						str+='</dl>';
+						str+='<div class="order-shop">';
+						for (var j = 0; j < data.orderItems.length; j++) {
+							var orderItems = data.orderItems;
+							str+='<dl>';
+							str+='	<a href="detail.html?id='+orderItems[j].itemId+'">';
+							str+='		<dt><img src="'+orderItems[j].picPath+'"/></dt>';
+							str+='		<dd>';
+							str+='			<p class="titleHide">'+orderItems[j].title+'</p>';
+							str+='			<small>颜色：经典绮丽款</small>';
+							str+='			<span>尺寸：L</span>';
+							if(data.status!=5&&data.status!=6&&data.status!=1&&data.status!=4){
+								if(orderItems[j].status == 0||orderItems[j].status == ''||orderItems[j].status==null){
+									str+='<a href="pay-back.html?orderId='+data.orderId+'&itemId='+orderItems[j].itemId+'">';
+									str+='			<input type="button" value="退货/退款" />';
+									str+='</a>';
+								}
+								if(orderItems[j].status == 1){
+									str+='<a href="javascript:;">';
+									str+='			<input type="button" value="申请退款中" />';
+									str+='</a>';
+								}
+								if(orderItems[j].status == 2){
+									str+='<a href="javascript:;">';
+									str+='			<input type="button" value="已退款" />';
+									str+='</a>';
+								}
+								if(orderItems[j].status == 3){
+									str+='<a href="javascript:;">';
+									str+='			<input type="button" value="退款失败" />';
+									str+='</a>';
+								}
+							}
+								
+							
+							str+='			<b>￥'+orderItems[j].price/100+'</b>';
+							str+='			<strong>×'+orderItems[j].num+'</strong>';
+							str+='		</dd>';
+							str+='	</a>	';
+							str+='</dl>';
+						}
+						str+='	<ul>';
+						str+='		<li>';
+						str+='			<span>运费</span>';
+						str+='			<small>包邮</small>';
+						str+='		</li>';
+						str+='		<li>';
+						str+='			<span>商品总额</span>';
+						str+='			<small>￥'+data.payment/100+'</small>';
+						str+='		</li>';
+						str+='		<li>';
+						str+='			<p>';
+						str+='				下单时间：'+new Date(data.updateTime).Format('yy-MM-dd hh:mm:ss');+'';
+						str+='				<br />订单编号：'+data.orderId+'';
+						str+='			</p>';
+						str+='		</li>';
+						str+='	</ul>';
+						str+='</div>';
+						$('.go-order').html(str);
+						str1='';
+						switch (data.status){
+							case 1:
+								str1+='		<a href="pay-ok.html?orderId='+data.orderId+'">';
+								str1+='		<input type="submit" value="去付款"  class="order-que"/>';
+								str1+='		</a>';
+								str1+='		<a href="pay-close.html?orderId='+data.orderId+'">';
+								str1+='			<input type="button" value="取消订单"  />';
+								str1+='		</a>';
+								break;
+							case 2:case 3:
+								str1+='		<a href="pay-close.html?orderId='+data.orderId+'">';
+								str1+='			<input type="button" value="取消订单"  />';
+								str1+='		</a>';
+								break;
+							case 4:
+								str1+='		<a href="wuliu.html?orderId='+data.orderId+'">';
+								str1+='			<input type="button" value="查看物流"  />';
+								str1+='		</a>';
+							/* 	str1+='		<a href="pay-close.html?orderId='+data.orderId+'">';
+								str1+='			<input type="submit" value="申请退货"  class="order-que"/>';
+								str1+='		</a>'; */
+								break;
+							case 5:
+								if(data.buyerRate == 0){
+									str1+='		<a href="assess.html?orderId='+data.orderId+'">';
+									str1+='			<input type="submit" value="去评价"  class="order-que"/>';
+									str1+='		</a>';
+								}else{
+									$('.order-footer').hide();
+								}
+								break;
+							
+							default:
+								$('.order-footer').hide();
+								break;
+						}
+						$('.order-footer').html(str1);
+					},
+					error:function(xhr,type,errorThrown){
+						console.log(type);
+					}
+				});
+			}
+    	})
+    </script>
+</head>
+<!--loading页开始-->
+<div class="loading">
+	<div class="loader">
+        <div class="loader-inner pacman">
+          <div></div>
+          <div></div>
+          <div></div>
+          <div></div>
+          <div></div>
+        </div>
+	</div>
+</div>
+<!--loading页结束-->
+<body>
+	<header class="top-header fixed-header">
+		<a class="icona" href="javascript:history.go(-1)">
+				<img src="images/left.png"/>
+			</a>
+		<h3>订单详情</h3>
+			
+			<a class="iconb" href="shopcar.html">
+			</a>
+	</header>
+	
+	<div class="contaniner fixed-cont">
+		<section class="go-order">
+			
+		</section>
+	</div>
+	
+	<footer class="order-footer fixed-footer">
+		<input type="submit" value="确认收货" />
+		<input type="button" value="查看物流"  />
+		
+	</footer>
+	
+	
+
+</body>
+</html>

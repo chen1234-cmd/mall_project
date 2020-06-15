@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="org.nzy.rest.mapper.ItemDetailMapper" >
+  <select id="getItemDetail" resultType="org.nzy.rest.pojo.ItemDetail" parameterType="java.lang.Long">
+  	SELECT 
+		a.id,
+		a.title,
+		a.sell_point,
+		a.image,
+		a.price,
+		a.num,
+		d.item_desc,
+		p.param_data
+	FROM
+		tb_item a
+	LEFT JOIN
+		tb_item_desc d ON a.id = d.item_id
+	LEFT JOIN
+		tb_item_param_item p ON a.id = p.item_id
+	WHERE 
+		a.id = #{id,jdbcType=BIGINT}
+	
+
+  </select>
+</mapper>

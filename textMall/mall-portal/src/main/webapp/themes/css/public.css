@@ -1,0 +1,26 @@
+.tab-nav-item1 {
+	width: 1%;
+	-webkit-box-flex: 1;
+	-webkit-flex: 1;
+	-ms-flex: 1;
+	flex: 1;
+	position: relative;
+	text-align: center;
+	color: #585858;
+	font-size: 0.8rem;
+	height: 2.5rem;
+	line-height: 2.5rem;
+	display: block;
+	background-color: #FFF;
+	
+}
+.tab-nav:nth-child(2){
+	padding: 0 20px;
+} 
+.tab-nav-item1 a {
+	display: inherit;
+	color: inherit;
+}
+.tab-nav-item1.tab-active {
+	color: #FF5E53;
+}

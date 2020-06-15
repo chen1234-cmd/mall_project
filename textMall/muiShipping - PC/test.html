@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1,minimum-scale=1,maximum-scale=1,user-scalable=no" />
+    <title></title>
+    <script src="js/mui.min.js"></script>
+    <link href="css/mui.min.css" rel="stylesheet"/>
+	<script src="js/jquery.min.js" type="text/javascript" charset="utf-8"></script>
+</head>
+<body>
+	<header class="mui-bar mui-bar-nav" >
+		<h1 class="mui-title">标题</h1>
+	</header>
+	<div class="mui-content">
+		<!--下拉刷新容器-->
+		<div id="refreshContainer" class="mui-scroll-wrapper" style="padding-top: 50px;">
+		  <div class="mui-scroll">
+			<!--数据列表-->
+			<ul class="mui-table-view mui-table-view-chevron" id="wall">
+			  
+				<li class="pic">
+					<a href="detail.html">
+						<img src="images/list-ph01.png"/>
+						<p>韩版青少年休闲修身长袖紧身衬衫</p>
+						<b>￥58</b><del>￥538</del>
+					</a>
+				</li>
+			  	
+			</ul>
+		  </div>
+		</div>
+	</div>
+    <script type="text/javascript" charset="utf-8">
+      	mui.init();
+		
+		mui.init({
+		  pullRefresh : {
+		    container:'#refreshContainer',
+		    down : {
+		      callback: pullfreshfunc,
+		    },
+		    up : {
+		      callback: function() {
+				  console.log('up');
+					mui.ajax('http://'+getIp()+':8891/rest/search?name=手机',{
+							data:{
+								
+							},
+							dataType:'json',//服务器返回json格式数据
+							type:'get',//HTTP请求类型
+							timeout:10000,//超时时间设置为10秒；
+							headers:{'Content-Type':'application/json'},	              
+							success:function(response){
+								//服务器返回响应，根据响应结果，
+								var data = response.data;
+								var str = "";
+								for(var i =0;i <data.length;i++){
+									str += '<li class="pic">'
+									str+='			<a href="detail.html?id='+data[i].id+'&catename=手机">';
+									str+='				<img src="'+data[i].image+'"/>';
+									str+='				<p>'+data[i].title+'</p>';
+									str+='				<b>￥'+data[i].price/100+'</b><del>￥'+data[i].price/100+'</del>';
+									str+='			</a>';
+									str+='	</li>';
+									
+								}
+								$('#wall').append(str);
+								
+							},
+							error:function(xhr,type,errorThrown){
+								//异常处理；
+								console.log(type);
+							}
+					});	
+				  var self = this;
+				  setTimeout(function() {
+					  self.endPullupToRefresh();
+				  }, 1500);
+			  } 
+		    }
+		  }
+		});
+		
+		function pullfreshfunc() {
+			//业务逻辑代码，比如通过ajax从服务器获取新数据；
+			console.log('down');
+			//注意，加载完新数据后，必须执行如下代码，注意：若为ajax请求，则需将如下代码放置在处理完ajax响应数据之后
+			//没有更多内容了，endPulldown 传入true， 不再执行下拉刷新
+			var self = this;
+			setTimeout(function() {
+				self.endPulldownToRefresh();
+			}, 1500);
+		}
+    </script>
+</body>
+</html>

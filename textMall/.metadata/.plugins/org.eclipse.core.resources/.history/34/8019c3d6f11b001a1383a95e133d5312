@@ -1,0 +1,42 @@
+package org.nzy.rest.service.impl;
+
+import java.util.List;
+
+import javax.annotation.Resource;
+
+import org.nzy.mapper.TbItemCatMapper;
+import org.nzy.pojo.FjnyResult;
+import org.nzy.pojo.TbContent;
+import org.nzy.pojo.TbItemCat;
+import org.nzy.pojo.TbItemCatExample;
+import org.nzy.pojo.TbItemCatExample.Criteria;
+import org.nzy.rest.service.TbItemCatService;
+import org.nzy.utils.JsonUtils;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+@Service
+public class TbItemCatServiceImpl implements TbItemCatService {
+
+	
+	@Value("TBITEM_CAT_KEY")
+	private String TBITEM_CAT_KEY;
+	@Resource
+	private	TbItemCatMapper tbItemCatMapper;
+	
+	@Override
+	public FjnyResult getTbItemCat(Long parentId) {
+		//从缓存中查询数据
+		String hget = jedisClient.hget(TBITEM_CAT_KEY, categoryId+"");
+		if(hget!= null&& !hget.isEmpty()) {
+			//把查询出的json字符串转换成list
+			List<TbContent> resultList = JsonUtils.jsonToList(hget, TbContent.class);
+			return FjnyResult.ok(resultList);
+		}
+		TbItemCatExample example = new TbItemCatExample();
+		Criteria criteria =  example.createCriteria();
+		criteria.andParentIdEqualTo(parentId);
+		List<TbItemCat> list = tbItemCatMapper.selectByExample(example );
+		return FjnyResult.ok(list);
+	}
+
+}

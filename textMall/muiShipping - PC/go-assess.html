@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>男装专区</title>
+    <link rel="stylesheet" type="text/css" href="css/loaders.min.css"/>
+    <link rel="stylesheet" type="text/css" href="css/loading.css"/>
+    <link rel="stylesheet" type="text/css" href="css/base.css"/>
+    <link rel="stylesheet" type="text/css" href="css/style.css"/>
+    <script src="js/jquery.min.js" type="text/javascript" charset="utf-8"></script>
+	<script src="js/mui.min.js" type="text/javascript" charset="utf-8"></script>  
+	<script src="js/public.js" type="text/javascript" charset="utf-8"></script>
+    <script type="text/javascript">
+    	$(window).load(function(){
+    		$(".loading").addClass("loader-chanage")
+    		$(".loading").fadeOut(300)
+			
+			/* 获取已登录用户信息 */
+			var token = localStorage.getItem('token');
+			console.log(token);
+			var userId;
+			mui.ajax('http://'+getIp()+':8891/rest/user/token/'+token,{
+				data:{
+					
+				},
+				dataType:'json',//服务器返回json格式数据
+				type:'post',//HTTP请求类型
+				timeout:10000,//超时时间设置为10秒；
+				success:function(resp){
+					var data = resp.data;
+					console.log(data);
+					if (resp.status == 200) {
+						userId = data.id;
+						orderload();
+					} else{
+						$('a').click(function(){
+							
+							$('#msg').html('请先登录！');
+							$('#msg').show(0);
+							$('#msg').delay(1000).hide(0);
+							setInterval(function(){
+								location.href='login.html';
+							}, 1000);
+							return false;
+						})
+					}
+				},
+				error:function(xhr,type,errorThrown){
+					console.log(type);
+				}
+			});
+			//订单页面填充
+			function orderload(){
+				mui.ajax('http://'+getIp()+':8894/order/getOrderByUserId',{
+					data:{
+						userId:userId
+					},
+					dataType:'json',//服务器返回json格式数据
+					type:'post',//HTTP请求类型
+					timeout:10000,//超时时间设置为10秒；
+					success:function(resp){
+						var data = DatetoLowPage( resp.data, "updateTime");
+						str = '';
+						for (var i = 0; i < data.length; i++) {
+							if(data[i].status == 5 && data[i].buyerRate==0){
+								str+='<dl>';
+								str+='	<dt>';
+								str+='		<time>'+new Date(data[i].updateTime).Format('yy-MM-dd hh:mm:ss');+'</time>';
+								str+='		<span>待评价</span>';
+								str+='	</dt>';
+								for (var j = 0; j < data[i].orderItems.length; j++) {
+									var orderItems = data[i].orderItems;
+									str+='	<ul>';
+									str+='		<a href="detail.html?id='+orderItems[j].itemId+'">';
+									str+='			<figure><img src="'+orderItems[j].picPath+'"/></figure>';
+									str+='			<li>';
+									str+='				<p>'+orderItems[j].title+'</p>';
+									str+='				<small>颜色：经典绮丽款</small>';
+									str+='				<span>尺寸：XL</span>';
+									str+='				<b>￥'+orderItems[j].price/100+'</b>';
+									str+='				<strong>×'+orderItems[j].num+'</strong>';
+									str+='			</li>';
+									str+='		</a>';
+									str+='	</ul>';
+								}
+								str+='	<dd>';
+								str+='		<h3>商品总额</h3>';
+								str+='		<i>￥'+data[i].payment/100+'</i>';
+								str+='	</dd>';
+								str+='	<dd>';
+								str+='		<a href="assess.html?orderId='+data[i].orderId+'">';
+								str+='		<input type="button" value="去评价"  class="order-que"/>';
+								str+='		</a>';
+								str+='		<a href="go-order.html?orderId='+data[i].orderId+'">';
+								str+='			<input type="button" value="订单详情" />';
+								str+='	</dd>';
+								str+='</dl>';
+							}
+						}
+						$('.order').append(str);
+					},
+					error:function(xhr,type,errorThrown){
+						console.log(type);
+					}
+				});
+			}
+		
+			
+    	})
+    </script>
+</head>
+<!--loading页开始-->
+<div class="loading">
+	<div class="loader">
+        <div class="loader-inner pacman">
+          <div></div>
+          <div></div>
+          <div></div>
+          <div></div>
+          <div></div>
+        </div>
+	</div>
+</div>
+<!--loading页结束-->
+<body>
+	<header class="top-header fixed-header">
+		<a class="icona" href="self.html">
+				<img src="images/left.png"/>
+			</a>
+		<h3>待评价</h3>
+			<a class="iconb" href="shopcar.html">
+			</a>
+	</header>
+	
+	<div class="contaniner fixed-conta">
+		<section class="order">
+			
+		
+		</section>
+	</div>
+</body>
+
+</html>

@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session version="1.0">
+<refactoring accessors="true" comment="Delete element from project &apos;mall-manager-web&apos;&#x0D;&#x0A;- Original project: &apos;mall-manager-web&apos;&#x0D;&#x0A;- Original element: &apos;info.properties&apos;" description="Delete element" element1="src/main/resources/resource/info.properties" elements="0" flags="589830" id="org.eclipse.jdt.ui.delete" resources="1" stamp="1575035409546" subPackages="false" version="1.0"/>
+</session>

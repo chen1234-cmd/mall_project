@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>分类</title>
+    <link rel="stylesheet" type="text/css" href="css/loaders.min.css"/>
+    <link rel="stylesheet" type="text/css" href="css/loading.css"/>
+    <link rel="stylesheet" type="text/css" href="css/base.css"/>
+    <link rel="stylesheet" type="text/css" href="css/style.css"/>
+    <script src="js/jquery.min.js" type="text/javascript" charset="utf-8"></script>
+	<script src="js/mui.min.js" type="text/javascript" charset="utf-8"></script>
+	<script src="js/public.js" type="text/javascript" charset="utf-8"></script>
+	<style type="text/css">
+		.fixed-cont{
+			height: 83%;
+			position: fixed;
+		}
+		.assort li {
+			white-space: nowrap;   //规定段落中的文本不进行换行
+			text-overflow:ellipsis;
+			overflow:hidden;
+			
+		
+			
+		}
+		.assort{
+			height:100%;
+			overflow:auto; 
+			float:left
+		}
+		.assort-cont{
+			height:95%;
+			overflow:auto; 
+			float:right
+		}
+		.assort-cont p{
+			white-space: nowrap;   //规定段落中的文本不进行换行
+			text-overflow:ellipsis;
+			overflow:hidden;
+		}
+	</style>
+    <script type="text/javascript">
+		
+		
+    	$(window).load(function(){
+    		$(".loading").addClass("loader-chanage")
+    		$(".loading").fadeOut(200)
+			//一级分类
+			mui.ajax('http://'+getIp()+':8891/rest/getTbItemCat',{
+				data:{
+					parentId:0
+				},
+				dataType:'json',//服务器返回json格式数据
+				type:'get',//HTTP请求类型
+				timeout:10000,//超时时间设置为10秒；
+				success:function(resp){
+					var data = resp.data;
+					str = '';
+					var j= 0;
+					for (var i = 0; i < data.length; i++) {
+						j++;
+						if(j==9){
+							j=1;
+						}
+						str+='<li class="" onclick="two('+data[i].id+');">';
+						str+='	<img src="images/classify0'+j+'.png"/>';
+						str+='	<span>'+data[i].name+'</span>';
+						str+='</li>';
+						
+					}
+					$('.assort ul').html(str);
+					$('#div1 li').eq(0).addClass('active');
+					$('#div1 li').click(function(){
+						$(this).addClass('active');
+						$('#div1 li').not($(this)).removeClass('active');
+					})
+					// console.log(data)
+				},
+				error:function(xhr,type,errorThrown){
+					console.log(type)
+				}
+			});
+			initTwo();
+			//二级分类
+			function initTwo(){
+				mui.ajax('http://'+getIp()+':8891/rest/getTbItemCat',{
+					data:{
+						parentId:1
+					},
+					dataType:'json',//服务器返回json格式数据
+					type:'get',//HTTP请求类型
+					timeout:10000,//超时时间设置为10秒；
+					success:function(resp){
+						var data = resp.data;
+						str = '';
+						str+='<figure>';
+						str+='	<a href="#">';
+						str+='		<img src="images/1.jpg"/>';
+						str+='	</a>';
+						str+='</figure>';
+						$('.assort-cont').html(str);
+						for (var i = 0; i < data.length; i++) {
+							str1='';
+							str1+='	<dl>';
+							str1+='		<dt>'+data[i].name+'</dt>';
+							str1+=	initThree(data[i].id )	;
+							str1+='	</dl>';
+							$('.assort-cont').append(str1);
+						}
+						
+						
+						console.log(data)
+					},
+					error:function(xhr,type,errorThrown){
+						console.log(type)
+					}
+				});
+			}
+			//三级分类默认加载
+			function initThree(parentId){
+				var str = '';
+				mui.ajax('http://'+getIp()+':8891/rest/getTbItemCat',{
+					data:{
+						parentId:parentId
+					},
+					dataType:'json',//服务器返回json格式数据
+					type:'get',//HTTP请求类型
+					timeout:10000,//超时时间设置为10秒；
+					async:false,
+					success:function(resp){
+						var data = resp.data;
+						// console.log(data)
+						var j = 1;
+						for (var i = 0; i < data.length; i++) {
+							str+='		<dd>';
+							str+='			<a href="searchlist.html?catename='+data[i].name+'">';
+							if(data[i].image==''||data[i].image==null){
+								//http://localhost:7777/imgs/54b49010050ae46c0cbc7c24411b849d.png
+								str+='				<img src="http://'+getIp()+':8080/imgs/54b49010050ae46c0cbc7c24411b849d.png"/>';
+							}else{
+								str+='				<img src="'+data[i].image+'"/>';
+							}
+							str+='				<p>'+data[i].name+'</p>';
+							str+='			</a>';
+							str+='		</dd>';	
+						}
+					},
+					error:function(xhr,type,errorThrown){
+						console.log(type)
+					}
+				});
+				return str;
+			}
+			
+			
+			
+    	})
+    </script>
+</head>
+<!--loading页开始-->
+<div class="loading">
+	<div class="loader">
+        <div class="loader-inner pacman">
+          <div></div>
+          <div></div>
+          <div></div>
+          <div></div>
+          <div></div>
+        </div>
+	</div>
+</div>
+<!--loading页结束-->
+<body style="background-color: #fff;">
+	<header class="page-header fixed-header" style="z-index: 999;">
+		<input type="search"  /> 
+		<span>
+			<img id="search" src="images/serach.png"/>
+		</span>
+	</header>
+	
+	<div class="contaniner fixed-cont">
+		<aside class="assort" id="div1">
+			<ul>
+				
+				
+			</ul>
+		</aside>
+		
+		<section class="assort-cont" >
+
+		</section>
+	</div>
+	
+	<footer class="page-footer fixed-footer">
+		<ul>
+			<li>
+				<a href="index.html">
+					<img src="images/footer001.png"/>
+					<p>首页</p>
+				</a>
+			</li>
+			<li class="active">
+				<a href="assort.html">
+					<img src="images/footer02.png"/>
+					<p>分类</p>
+				</a>
+			</li>
+			<li>
+				<a href="shopcar.html">
+					<img src="images/footer003.png"/>
+					<p>购物车</p>
+				</a>
+			</li>
+			<li>
+				<a href="self.html">
+					<img src="images/footer004.png"/>
+					<p>个人中心</p>
+				</a>
+			</li>
+		</ul>
+	</footer>
+	
+	
+</body>
+<script type="text/javascript">
+//令返回失效
+history.pushState(null, null, window.location.href)
+window.onpopstate = function (event) {
+	   history.go(1)
+}
+mui.plusReady(function() {
+	//首页返回键处理
+	//处理逻辑：2秒内，连续两次按返回键，则退出应用
+	var first = null;
+	plus.key.addEventListener('backbutton', function() {
+		//首次按键，提示‘再按一次退出应用’
+		if(!first) {
+			first = new Date().getTime();
+			mui.toast('再按一次退出应用');
+			setTimeout(function() {
+				first = null;
+			}, 2000);
+		} else {
+			if(new Date().getTime() - first < 2000) {
+				plus.runtime.quit();
+			}
+		}
+	}, false);
+});
+	/* 搜索 */
+	
+	$('#search').click(function(){
+		var sq = $('[type=search]').val();
+		location.href ="searchlist.html?catename="+sq;
+	})
+	/* 随机数生成 */
+	function sj(y,x) {
+	    //x上限，y下限     
+	    var x = x;
+	    var y = y;
+	    var rand = parseInt(Math.random() * (x - y + 1) + y);
+	    return rand;
+	}
+	/* 点击修改二级分类 */
+	function two(parentId){
+		
+		$(".assort-cont").animate({scrollTop:0},0);
+		mui.ajax('http://'+getIp()+':8891/rest/getTbItemCat',{
+			data:{
+				parentId:parentId
+			},
+			dataType:'json',//服务器返回json格式数据
+			type:'get',//HTTP请求类型
+			timeout:10000,//超时时间设置为10秒；
+			success:function(resp){
+				var data = resp.data;
+				str = '';
+				str+='<figure>';
+				str+='	<a href="#">';
+				str+='		<img src="images/3.jpg"/>';
+				str+='	</a>';
+				str+='</figure>';
+				$('.assort-cont').html(str);
+				for (var i = 0; i < data.length; i++) {
+					str1='';
+					str1+='	<dl>';
+					str1+='		<dt>'+data[i].name+'</dt>';
+					str1+=initThree(data[i].id);
+					str1+='	</dl>';
+					$('.assort-cont').append(str1);
+				}
+				
+				 
+				
+			},
+			error:function(xhr,type,errorThrown){
+				console.log(type)
+			}
+		});
+	}
+	
+	//三级分类点击加载
+	function initThree(parentId){
+		var str = '';
+		mui.ajax('http://'+getIp()+':8891/rest/getTbItemCat',{
+			data:{
+				parentId:parentId
+			},
+			dataType:'json',//服务器返回json格式数据
+			type:'get',//HTTP请求类型
+			timeout:10000,//超时时间设置为10秒；
+			async:false,
+			success:function(resp){
+				var data = resp.data;
+				var j = 1;
+				for (var i = 0; i < data.length; i++) {
+					str+='		<dd>';
+					str+='			<a <a href="searchlist.html?catename='+data[i].name+'">';
+					if(data[i].image==''||data[i].image==null){
+						//http://localhost:7777/imgs/54b49010050ae46c0cbc7c24411b849d.png
+						str+='				<img src="http://'+getIp()+':8080/imgs/54b49010050ae46c0cbc7c24411b849d.png"/>';
+					}else{
+						str+='				<img src="'+data[i].image+'"/>';
+					}
+					str+='				<p>'+data[i].name+'</p>';
+					str+='			</a>';
+					str+='		</dd>';	
+				}
+			},
+			error:function(xhr,type,errorThrown){
+				console.log(type)
+			}
+		});
+		return str;
+	}
+	
+	
+</script>
+</html>

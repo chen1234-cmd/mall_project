@@ -1,0 +1,11 @@
+INDEX VERSION 1.4+D:\textMall\.metadata\.plugins\org.eclipse.wst.jsdt.core\indexes
+3930388108.index
+669922479.index
+3852692752.index
+3416618569.index
+3470051544.index
+3345334423.index
+1774064872.index
+4138257651.index
+2470536263.index
+893977888.index

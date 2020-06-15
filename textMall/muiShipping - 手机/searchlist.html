@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>搜索</title>
+    <link rel="stylesheet" type="text/css" href="css/loaders.min.css"/>
+    <link rel="stylesheet" type="text/css" href="css/loading.css"/>
+    <link rel="stylesheet" type="text/css" href="css/base.css"/>
+    <link rel="stylesheet" type="text/css" href="css/style.css"/>
+	<script src="js/mui.min.js" type="text/javascript" charset="utf-8"></script>
+    <script src="js/jquery.min.js" type="text/javascript" charset="utf-8"></script>
+	<script src="js/public.js" type="text/javascript" charset="utf-8"></script>
+	<link rel="stylesheet" type="text/css" href="css/mui.min.css"/>  
+    <script type="text/javascript">
+		
+    	$(window).load(function(){
+    		$(".loading").addClass("loader-chanage")
+    		$(".loading").fadeOut(300)
+			//消息弹窗
+			msgBox();
+			/* 搜索列表 */
+			//获取地址栏catename值
+			
+			
+			var catename=GetQueryValue('catename');
+			console.log(catename);
+			//填充页面
+			mui.ajax('http://'+getIp()+':8891/rest/search',{
+					data:{
+						name:catename,
+						page:0
+					},
+					dataType:'json',//服务器返回json格式数据
+					type:'get',//HTTP请求类型
+					timeout:10000,//超时时间设置为10秒；
+					headers:{'Content-Type':'application/json'},	              
+					success:function(resp){
+						//服务器返回响应，根据响应结果，
+						var data = resp.data;
+						var str = "";
+						if(data == null||data == ''){
+							mui.toast('没找到商品');
+							setInterval(function(){
+								// location.href='index.html';
+							}, 1000);
+						}else{
+							
+							for(var i =0;i <data.length;i++){
+								str += '<li class="pic">'
+								str+='			<a href="detail.html?id='+data[i].id+'&catename='+catename+'">';
+								str+='				<img src="'+data[i].image+'"/>';
+								str+='				<p>'+data[i].title+'</p>';
+								str+='				<b>￥'+data[i].price/100+'</b><del>￥'+data[i].price/100+'</del>';
+								str+='			</a>';
+								str+='	</li>';
+								
+							}
+							$('#sq').attr("value",catename);
+							$('#wall').append(str);
+							
+							loadWall();
+						}
+						
+					},
+					error:function(xhr,type,errorThrown){
+						//异常处理；
+						console.log(type);
+					}
+			});	
+			
+    	})
+    </script>
+</head>
+<!--loading页开始-->
+<div class="loading">
+	<div class="loader">
+        <div class="loader-inner pacman">
+          <div></div>
+          <div></div>
+          <div></div>
+          <div></div>
+          <div></div>
+        </div>
+	</div>
+</div>
+<!--loading页结束-->
+<body>
+	<header class="top-header fixed-header" style="z-index: 9999; height: 40px;">
+		<a class="icona" href="index.html">
+				<img src="images/left.png"/>
+			</a>
+		<input type="text" placeholder="维多利亚的秘密" name="sq" id="sq" value="" 
+		style="width: 80%; border-radius: 25px;
+		padding-left: 15px;height: 10px;margin: 10px ;"/>
+			
+			<a class="iconb" id="search"class="search" href="javacript:;" >
+				<img src="images/list-search.png" class="search"/>
+			</a>
+			
+	</header>
+	
+	
+	<div class="contaniner  fixed-conta">
+		<div class="list">
+			<nav style="z-index: 9998; position: fixed; top: 40px;">
+				<ul  >
+					<li class="list-active">
+						<a href="#">
+							<span>全部</span>
+						</a>
+					</li>
+					<li >
+						<a href="#">
+							<span>销量</span>
+							<img src="images/up-red.png"/>
+						</a>
+					</li>
+					<li>
+						<a href="#">
+							<span>价格</span>
+						</a>
+					</li>
+					<li>
+						<a href="#">
+							<span>评价</span>
+						</a>
+					</li>
+				</ul>
+			</nav>
+			
+		</div>
+		<section class="list">
+			<div id="refresh" class="mui-content  mui-scroll-wrapper" style="padding-top: 90px;" >
+				<div class="mui-scroll">	
+					<ul class="wall" id="wall">
+
+					</ul>
+				</div>
+			</div>
+			
+		</section>
+	</div>
+	
+	
+	
+	
+<script src="js/jquery.min.js" type="text/javascript" charset="utf-8"></script>
+<script type="text/javascript" src="js/jaliswall.js"></script>
+	<script type="text/javascript">
+	
+	var catename=GetQueryValue('catename');
+	$('#sq').keyup(function(){
+		var sq = $('#sq').val()
+		$('#search').attr('href','searchlist.html?catename='+sq);
+		console.log(sq);
+	});
+	//上拉加载,下拉刷新
+	mui('body').on('tap', 'a', function () { document.location.href = this.href; });
+	mui.init();
+	var page = 0;
+	
+	
+	 mui.init({
+		pullRefresh : {
+		 container:"#refresh",//下拉刷新容器标识，querySelector能定位的css选择器均可，比如：id、.class等
+			down: {//下拉刷新
+				 height: 50,//可选,默认50.触发下拉刷新拖动距离,
+				
+				 auto: false,//可选,默认false.首次加载自动下拉刷新一次
+				 contentdown: "下拉可以刷新",//可选，在下拉可刷新状态时，下拉刷新控件上显示的标题内容
+				 contentover: "释放立即刷新",//可选，在释放可刷新状态时，下拉刷新控件上显示的标题内容
+				 contentrefresh: "正在刷新...",//可选，正在刷新状态时，下拉刷新控件上显示的标题内容
+				 callback: function () {//必选，刷新函数，根据具体业务来编写，比如通过ajax从服务器获取新数据；
+					mui.ajax('http://'+getIp()+':8891/rest/search',{
+							data:{
+								name:catename,
+								page:sj(1,20)
+							},
+							dataType:'json',//服务器返回json格式数据
+							type:'get',//HTTP请求类型
+							timeout:10000,//超时时间设置为10秒；
+							headers:{'Content-Type':'application/json'},	              
+							success:function(response){
+								var data = response.data;
+								if(data!=null&&data!=''){
+									var str = "";
+									console.log(sj(1,20))
+									console.log(data)
+									
+									for(var i =0;i <data.length;i++){
+										str += '<li class="pic">'
+										str+='			<a href="detail.html?id='+data[i].id+'&catename='+catename+'">';
+										str+='				<img src="'+data[i].image+'"/>';
+										str+='				<p>'+data[i].title+'</p>';
+										str+='				<b>￥'+data[i].price/100+'</b><del>￥'+data[i].price/100+'</del>';
+										str+='			</a>';
+										str+='	</li>';
+										
+									}		
+									$('#wall').html(str);
+									loadWall();
+								}else{
+									$('#msg').html('没有更多商品了！！');
+									$('#msg').show(0);
+									$('#msg').delay(1000).hide(0);
+								}
+								
+								
+							},
+							error:function(xhr,type,errorThrown){
+								//异常处理；
+								console.log(type);
+							}
+					});	
+					
+					 getInfosrefresh()
+				 }
+			 },
+			up: {//上拉加载
+				 height: 150,//可选.默认50.触发上拉加载拖动距离
+				 auto: true,//可选,默认false.自动上拉加载一次
+				 contentrefresh: "正在加载...",//可选，正在加载状态时，上拉加载控件上显示的标题内容
+				 contentnomore: '没有更多数据了',//可选，请求完毕若没有更多数据时显示的提醒内容；
+				 callback: async function up() {//必选，刷新函数，根据具体业务来编写，比如通过ajax从服务器获取新数据；
+						 page++;
+						 var check = 0;
+						 console.log(page);
+						mui.ajax('http://'+getIp()+':8891/rest/search',{
+								data:{
+									name:catename,
+									page:page
+								},
+								dataType:'json',//服务器返回json格式数据
+								type:'get',//HTTP请求类型
+								timeout:10000,//超时时间设置为10秒；
+								headers:{'Content-Type':'application/json'},	              
+								success:function(response){
+									var data = response.data;
+									if(data!=null&&data!=''){
+										var str = "";
+										console.log(sj(1,20))
+										console.log(data)
+										
+										for(var i =0;i <data.length;i++){
+											str += '<li class="pic">'
+											str+='			<a href="detail.html?id='+data[i].id+'&catename='+catename+'">';
+											str+='				<img src="'+data[i].image+'"/>';
+											str+='				<p>'+data[i].title+'</p>';
+											str+='				<b>￥'+data[i].price/100+'</b><del>￥'+data[i].price/100+'</del>';
+											str+='			</a>';
+											str+='	</li>';
+											
+										}		
+										$('#wall').append(str);
+										loadWall();
+										
+									}else{
+										$('#msg').html('没有更多商品了！！');
+										$('#msg').show(0);
+										$('#msg').delay(1000).hide(0);
+										check= 1;
+									}
+									
+								},
+								error:function(xhr,type,errorThrown){
+									//异常处理；
+									console.log(type);
+								}
+						});	
+							this.endPullupToRefresh();
+						
+							
+				 }
+			 }
+		   }
+	    });
+		function down() {//必选，刷新函数，根据具体业务来编写，比如通过ajax从服务器获取新数据；
+							mui.ajax('http://'+getIp()+':8891/rest/search',{
+									data:{
+										name:catename,
+										page:sj(1,20)
+									},
+									dataType:'json',//服务器返回json格式数据
+									type:'get',//HTTP请求类型
+									timeout:10000,//超时时间设置为10秒；
+									headers:{'Content-Type':'application/json'},	              
+									success:function(response){
+										var data = response.data;
+										if(data!=null&&data!=''){
+											var str = "";
+											console.log(sj(1,20))
+											console.log(data)
+											
+											for(var i =0;i <data.length;i++){
+												str += '<li class="pic">'
+												str+='			<a href="detail.html?id='+data[i].id+'&catename='+catename+'">';
+												str+='				<img src="'+data[i].image+'"/>';
+												str+='				<p>'+data[i].title+'</p>';
+												str+='				<b>￥'+data[i].price/100+'</b><del>￥'+data[i].price/100+'</del>';
+												str+='			</a>';
+												str+='	</li>';
+												
+											}		
+											$('#wall').html(str);
+											loadWall();
+										}else{
+											$('#msg').html('没有更多商品了！！');
+											$('#msg').show(0);
+											$('#msg').delay(1000).hide(0);
+										}
+										
+										
+									},
+									error:function(xhr,type,errorThrown){
+										//异常处理；
+										console.log(type);
+									}
+							});	
+							
+							 getInfosrefresh()
+		}
+	    function getInfosrefresh(){
+	   	 setTimeout(nextRefresh, 1000);
+	    }
+	    function nextRefresh (){
+	   	 mui('#refresh').pullRefresh().endPulldownToRefresh();
+	    }
+	
+	function loadWall(){
+		$('.wall').jaliswall({ item: '.pic' });
+		//导航栏
+		$('nav li a').eq(0).attr('href','javascript:down()');
+		$('nav li a').eq(1).attr('href','javascript:down()');
+		$('nav li a').eq(2).attr('href','javascript:down()');
+		$('nav li a').eq(3).attr('href','javascript:down()');
+		
+	}
+	</script>
+</body>
+</html>

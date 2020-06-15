@@ -1,0 +1,199 @@
+package org.nzy.controller;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+import java.util.UUID;
+
+import javax.servlet.http.HttpServletRequest;
+
+import org.nzy.pojo.TbContent;
+import org.nzy.pojo.TbContentCategory;
+import org.nzy.service.CommonService;
+import org.nzy.utils.FjnyResult;
+import org.nzy.utils.HttpClientUtil;
+import org.nzy.utils.LayuiReplay;
+import org.nzy.utils.ProductPicResultBean;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.multipart.MultipartFile;
+
+@Controller
+public class CmsController {
+	
+	/**
+	 * 首页轮播图查询列表
+	 */
+	@Autowired
+	private CommonService commonService;
+	
+	@RequestMapping("/test/bannerlist")
+	@ResponseBody
+	public LayuiReplay bannerlist(@RequestParam Integer page, @RequestParam Integer limit,String title)throws UnsupportedEncodingException {
+		LayuiReplay layuiReplay =null;
+		if(title==null) {
+			layuiReplay = commonService.bannerlist(page, limit);
+		}else{
+			layuiReplay = commonService.bannerlist(page, limit,title);
+		}
+		return layuiReplay;
+	}
+	
+	
+	/**
+	 * 修改轮播图
+	 */
+	@RequestMapping("/banner/updateBanner")
+	@ResponseBody
+	public LayuiReplay updateBanner(TbContent tbContent) {
+		tbContent.setUpdated(new Date());
+		HttpClientUtil.doGet("http://localhost:8891/rest/cache/sync/content/"+tbContent.getCategoryId());
+		return commonService.updateBanner(tbContent);
+		
+	}
+	/**
+	 * 上传图片
+	 */
+	@RequestMapping("/banner/uploadBannerImg")
+	@ResponseBody
+	public ProductPicResultBean PicUpload(@RequestParam(value ="file") MultipartFile file){
+		ProductPicResultBean productPicResult = new ProductPicResultBean();
+		if (!file.isEmpty()) {
+			String uploadPath = "D:\\textMall\\UploadImg";
+			//获取原先文件名
+			String originalFilename = file.getOriginalFilename();
+			//生成新的文件名
+			String newFileName = UUID.randomUUID() + originalFilename;
+			//要存放文件位置
+			File dest = new File(uploadPath,newFileName);
+			try {
+				file.transferTo(dest);
+				System.out.println("上传成功:" + dest.getAbsolutePath());
+				productPicResult.setError(0);
+				productPicResult.setUrl("http://localhost:7777/imgs/" + newFileName);
+				productPicResult.setMessage("success");
+				return productPicResult;
+			} catch (IllegalStateException e) {
+				productPicResult.setError(1);
+				productPicResult.setMessage(e.getMessage());
+				return productPicResult;
+			} catch (IOException e) {
+				productPicResult.setError(1);
+				productPicResult.setMessage(e.getMessage());
+				return productPicResult;
+			}
+			
+		}
+		productPicResult.setError(1);
+		productPicResult.setMessage("照片为空");
+		return productPicResult;
+	}
+	//修改广告位置状态
+	//goodsType/changeTypeState
+	@RequestMapping("goodsType/changeTypeState") 
+	@ResponseBody
+	public FjnyResult changeTypeState(TbContentCategory tbContentCategory) {
+		return commonService.changeTypeState(tbContentCategory);
+	}
+	/**
+	 * 删除轮播图信息
+	 * URL：/banner/deleteBanner
+	 */
+	@RequestMapping("/banner/deleteBanner")
+	@ResponseBody
+	public FjnyResult deleteBanner(TbContent tbContent) {
+		System.out.println("controller:删除轮播图");
+		HttpClientUtil.doGet("http://localhost:8891/rest/cache/sync/content/"+tbContent.getCategoryId());
+		return commonService.deleteBanner(tbContent);
+	}
+	
+	/**
+	 * 添加轮播图
+	 * url： /banner/addBanner
+	 */
+	@RequestMapping("/banner/addBanner")
+	@ResponseBody
+	public FjnyResult addBanner(TbContent tbContent) {
+		tbContent.setCreated(new Date());
+		tbContent.setUpdated(new Date());
+		HttpClientUtil.doGet("http://localhost:8891/rest/cache/sync/content/"+tbContent.getCategoryId());
+		return commonService.addBanner(tbContent);
+	}
+	/**
+	 * 内容广告分类
+	 */
+	@RequestMapping("test/category")
+	@ResponseBody
+	public LayuiReplay category(Integer page, int limit) {
+		return commonService.category(page, limit);
+	}
+	/**
+	 * 广告选择器
+	 * url://list/{parentId}
+	 */
+	@RequestMapping("/test/content/")
+	@ResponseBody()
+	public FjnyResult content(TbContentCategory tbContentCategory) {
+		return commonService.content(tbContentCategory);
+	}
+	
+//	/**
+//	 * 上传图片
+//	 *
+//	 * @param request
+//	 * @param file
+//	 * @return
+//	 */
+//	@RequestMapping(value = "uploadImg", method = RequestMethod.POST)
+//	@ResponseBody
+//	public String uploadImg1(HttpServletRequest request, MultipartFile file) {
+//	    Gson gson = new Gson();
+//	    List<String> pathList = new ArrayList<String>();
+//	    String pic_path;
+//	    if (null != file) {
+//	        // 文件原名称
+//	        String myFileName = file.getOriginalFilename();
+//	        String fileName = UUID.randomUUID().toString() + "." + myFileName.
+//	                substring(myFileName.lastIndexOf(".") + 1);
+//	        try {
+//	            String tomcat_path = System.getProperty("user.dir");
+//	            //获取tomcat中项目同级路径
+//	            String bin_path = tomcat_path.substring(tomcat_path.lastIndexOf("/") + 1, tomcat_path.length());
+//	            if (("bin").equals(bin_path)) {
+//	                pic_path = tomcat_path.substring(0, System.getProperty("user.dir").lastIndexOf("/")) + "/webapps" + "/upload" + "/uploadImg/";
+//	            } else {
+//	                pic_path = tomcat_path + "/webapps" + "/upload" + "/uploadImg/";
+//	            }
+//	            logger.info("上传图片的路径：" + pic_path + fileName);
+//	            File fileDir = new File(pic_path + fileName);
+//	            //如果不存在 则创建
+//	            if (!fileDir.exists()) {
+//	                fileDir.mkdirs();
+//	            }
+//	            // 将内存中的数据写入磁盘
+//	            file.transferTo(fileDir);
+//	//图片路径 ip:端口/upload/uploadImg/图片名
+//
+//	pathList.add(ImgConstant.ACCESS_IMAGE_URL + fileName);
+//	            return gson.toJson(pathList);
+//	        } catch (IllegalStateException e) {
+//	            logger.error("图片上传错误", e);
+//	        } catch (IOException e) {
+//	            logger.error("图片上传错误", e);
+//	        }
+//	    } else {
+//	        System.out.println("上传内容为空！");
+//	    }
+//	    return gson.toJson(pathList);
+//	}
+//	
+	
+}

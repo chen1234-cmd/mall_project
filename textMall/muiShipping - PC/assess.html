@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>男装专区</title>
+    <link rel="stylesheet" type="text/css" href="css/loaders.min.css"/>
+    <link rel="stylesheet" type="text/css" href="css/loading.css"/>
+    <link rel="stylesheet" type="text/css" href="css/base.css"/>
+    <link rel="stylesheet" type="text/css" href="css/style.css"/>
+    <script src="js/jquery.min.js" type="text/javascript" charset="utf-8"></script>
+	<script src="js/mui.min.js" type="text/javascript" charset="utf-8"></script>
+	<script src="js/public.js" type="text/javascript" charset="utf-8"></script>
+    <script type="text/javascript">
+    	$(window).load(function(){
+    		$(".loading").addClass("loader-chanage")
+    		$(".loading").fadeOut(300)
+			//初始化消息弹窗
+			msgBox();
+			//获取地址栏orderId参数值
+			var orderId =parseInt( GetQueryValue('orderId'));
+			console.log(orderId);
+			/* 获取已登录用户信息 */
+			var token = localStorage.getItem('token');
+			console.log(token);
+			var userId;
+			mui.ajax('http://'+getIp()+':8891/rest/user/token/'+token,{
+				data:{
+					
+				},
+				dataType:'json',//服务器返回json格式数据
+				type:'post',//HTTP请求类型
+				timeout:10000,//超时时间设置为10秒；
+				success:function(resp){
+					var data = resp.data;
+					console.log(data);
+					if (resp.status == 200) {
+						userId = data.id;
+						orderload();
+					} else{
+						$('a').click(function(){
+							
+							$('#msg').html('请先登录！');
+							$('#msg').show(0);
+							$('#msg').delay(1000).hide(0);
+							setInterval(function(){
+								location.href='login.html';
+							}, 1000);
+							return false;
+						})
+					}
+				},
+				error:function(xhr,type,errorThrown){
+					console.log(type);
+				}
+			});
+			
+			function orderload(){
+				mui.ajax('http://'+getIp()+':8894/order/getOrderByOrderId',{
+					data:{
+						orderId:orderId
+					},
+					dataType:'json',//服务器返回json格式数据
+					type:'post',//HTTP请求类型
+					timeout:10000,//超时时间设置为10秒；
+					success:function(resp){
+						var data = resp.data;
+						console.log(data)
+						str='';
+						for (var i = 0; i < data.orderItems.length; i++) {
+							str+='<div class="item">';
+							str+='	<p>';
+							str+='		<img src="'+data.orderItems[i].picPath+'"/>';
+							str+='		<textarea rows="5" itemid="'+data.orderItems[i].itemId+'" placeholder="请写下对宝贝的感受吧，对他人帮助很大哦" ></textarea>';
+							str+='	</p>	';
+							str+='	<ul>';
+							str+='		<li>';
+							str+='			商品评价';
+							str+='		</li>';
+							str+='		<li class="assess-right" start ="5">';
+							str+='			<img src="images/detail-iocn01.png"/>';
+							str+='			<img src="images/detail-iocn01.png"/>';
+							str+='			<img src="images/detail-iocn01.png"/>';
+							str+='			<img src="images/detail-iocn01.png"/>';
+							str+='			<img src="images/detail-iocn01.png"/>';
+							str+='		</li>';
+							str+='	</ul>';
+							str+='</div>';
+						}
+						$('.assess').html(str);
+						//评价星级
+						$('.assess-right img').click(function(){
+							$(this).attr('src','images/detail-iocn01.png');
+							var s = $(this).prevAll().attr('src','images/detail-iocn01.png');
+							$(this).nextAll().attr('src','images/detail-iocn001.png');
+							$(this).parent().attr('start',s.length+1);
+						})
+						loadok();
+					},
+					error:function(xhr,type,errorThrown){
+						console.log(type);
+					}
+				});
+			}
+			//评价星级
+			$('.assess-right img').click(function(){
+				$(this).attr('src','images/detail-iocn01.png');
+				var s = $(this).prevAll().attr('src','images/detail-iocn01.png');
+				$(this).nextAll().attr('src','images/detail-iocn001.png');
+				$(this).parent().attr('start',s.length+1);
+			})
+			
+    	})
+    </script>
+</head>
+<!--loading页开始-->
+<div class="loading">
+	<div class="loader">
+        <div class="loader-inner pacman">
+          <div></div>
+          <div></div>
+          <div></div>
+          <div></div>
+          <div></div>
+        </div>
+	</div>
+</div>
+<!--loading页结束-->
+<body>
+	<header class="top-header fixed-header">
+		<a class="icona" href="javascript:history.go(-1)">
+				<img src="images/left.png"/>
+			</a>
+		<h3>去评价</h3>
+			
+			<a class="iconb" href="shopcar.html">
+			</a>
+	</header>
+	
+	<div class="contaniner fixed-cont">
+		<section class="assess">
+				<p>
+					<img src="images/detail-pp01.png"/>
+					<textarea rows="5" placeholder="请写下对宝贝的感受吧，对他人帮助很大哦" ></textarea>
+				</p>	
+				<ul>
+					<li>
+						商品评价
+					</li>
+					<li class="assess-right" >
+						<img  src="images/detail-iocn01.png"/>
+						<img  src="images/detail-iocn01.png"/>
+						<img  src="images/detail-iocn01.png"/>
+						<img  src="images/detail-iocn01.png"/>
+						<img  src="images/detail-iocn01.png"/>
+					</li>
+				</ul>
+		
+		</section>
+	</div>
+	
+	<footer class="assess-footer fixed-footer ">
+		<ul>
+			<li>
+				<input type="checkbox" id="ass"/>
+				<label for="ass" onselectstart="return false">匿名评价</label>
+			</li>
+			<input type="button" id="post-assess" value="发表评论" />
+		</ul>
+	</footer>
+	
+	<script type="text/javascript">
+		//获取地址栏orderId参数值
+		var orderId =parseInt( GetQueryValue('orderId'));
+		console.log(orderId);
+		$(".assess-footer ul li label").on('touchstart',function(){
+			if($(this).hasClass('assd')){
+				$(".assess-footer ul li label").removeClass("assd")
+			}else{
+				$(".assess-footer ul li label").addClass("assd")
+			};
+		});
+		function loadok(){
+			$('#post-assess').click(function(){
+				$('.item').each(function(i){
+					var itemid = $(this).find('textarea').attr('itemid');
+					var assess = $(this).find('textarea').val();
+					var start =  $(this).find('.assess-right').attr('start');
+					mui.ajax('http://'+getIp()+':8894/order/assess',{
+						data:{
+							orderid:orderId,
+							itemid:itemid,
+							assess:assess,
+							start:start
+						},
+						dataType:'json',//服务器返回json格式数据
+						type:'post',//HTTP请求类型
+						timeout:10000,//超时时间设置为10秒；
+						success:function(resp){
+							var data = resp.data;
+							if(resp.status == 200){
+								location.href='assess-ok.html?orderId='+orderId;
+							}else{
+								$('#status').text('评价未完成！');
+							}
+						},
+						error:function(xhr,type,errorThrown){
+							console.log(type);
+						}
+					});
+				})
+				
+					
+			})
+		}
+		
+	</script>
+</body>
+</html>

@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>购物车</title>
+    <link rel="stylesheet" type="text/css" href="css/loaders.min.css"/>
+    <link rel="stylesheet" type="text/css" href="css/loading.css"/>
+    <link rel="stylesheet" type="text/css" href="css/base.css"/>
+    <link rel="stylesheet" type="text/css" href="css/style.css"/>
+      <script src="js/jquery.min.js" type="text/javascript" charset="utf-8"></script>
+	  <script src="js/public.js" type="text/javascript" charset="utf-8"></script>
+	  <script src="js/mui.min.js" type="text/javascript" charset="utf-8"></script>
+	  <style type="text/css">
+	  	.titleHide{
+	  		height: 43px;
+	  		overflow:hidden;
+	  	}
+	  </style>
+    <script type="text/javascript">
+    	$(window).load(function(){
+    		$(".loading").addClass("loader-chanage")
+    		$(".loading").fadeOut(300)
+			msgBox();
+			//加载购物车cookie
+			var itemCarCookie =  localStorage.getItem('itemCarCookie');
+			jsoncookie = JSON.parse(itemCarCookie);
+			console.log(jsoncookie);
+			//渲染购物车列表
+			str="";
+			for (var i = 0; i < jsoncookie.length; i++) {
+				str+='<section class="shopcar">';
+				str+='	<div class="shopcar-checkbox">';
+				str+='		<label for="shopcar" onselectstart="return false"></label>';
+				str+='		<input type="checkbox" id="shopcar"/>';
+				str+='	</div>';
+				str+='	<figure ><a href="detail.html?id='+jsoncookie[i].id+"&catename="+jsoncookie[i].catename+'"><img src="'+jsoncookie[i].image+'"/></a></figure>';
+				str+='	<dl>';
+				str+='		<dt class="titleHide">'+jsoncookie[i].title+'</dt>';
+				str+='		<dd>'+jsoncookie[i].colorsize+'</dd>';
+				str+='		<div class="addnum">';
+				str+='			<div name="jian"  class="jiajian">-</div>';
+				str+='			<input type="hidden"  name="checkid" value="'+jsoncookie[i].id+'" />';
+				str+='			<div name="num" class="num">' +jsoncookie[i].num+'</div>';
+				str+='			<div name="jia" class="jiajian">+</div>';
+				str+='		</div>';
+				str+='		<h3>￥'+jsoncookie[i].price*jsoncookie[i].num+'</h3>';
+				str+='		<small checkid = "'+jsoncookie[i].id+'"><img src="images/shopcar-icon01.png"/></small>';
+				str+='	</dl>';
+				str+='</section>';
+			}
+			$('#carbody').append(str);
+			
+			//加减商品
+			$('[name=jian]').click(function(){
+				var num = parseInt($(this).next().next().text());
+				var checkid =  $(this).next().val();
+				
+				for (var i = 0; i < jsoncookie.length; i++) {
+					if(jsoncookie[i].id == checkid){	
+						
+						//数量
+						if(num==1){
+							$(this).next().next().text(num);
+						}else{
+							console.log(num-1)
+							jsoncookie[i].num = num-1;
+							var strcookie  = JSON.stringify(jsoncookie);
+							localStorage.setItem('itemCarCookie',strcookie);
+							$(this).next().next().text(num-1);
+							//小计
+							var sum =  jsoncookie[i].price*(num-1);
+							$(this).parent().next().text('￥'+sum);
+							//合计
+							var label = $(this).parent().parent().parent().find('label');
+							if(label.hasClass('shopcar-checkd')){
+								label.attr('price',sum);
+								changeprice();
+							}
+							
+						}
+						
+						
+					}
+					
+				}
+				
+			});
+			$('[name=jia]').click(function(){
+				var num = parseInt($(this).prev().text());
+				var checkid =  $(this).prev().prev().val();
+				for (var i = 0; i < jsoncookie.length; i++) {
+					if(jsoncookie[i].id == checkid){
+						jsoncookie[i].num = num+1;
+						var strcookie  = JSON.stringify(jsoncookie);
+						localStorage.setItem('itemCarCookie',strcookie);
+						//数量
+						$(this).prev().text(num+1);
+						var sum =  jsoncookie[i].price*(num+1);
+						//小计
+						$(this).parent().next().text('￥'+sum);
+						//合计
+						var label = $(this).parent().parent().parent().find('label');
+						if(label.hasClass('shopcar-checkd')){
+							label.attr('price',sum);
+							changeprice();
+						}
+						
+					}
+					
+				}
+			});
+			
+			//合计
+			function changeprice(){
+				var allprice = 0;
+				   $('#carbody').find('[price]').each(   
+				   function(){
+					   var price = $(this).attr('price');
+					   var price = parseInt(price);
+					   allprice+=price;
+					  
+				   });
+				$('#allprice').text('合计：￥'+allprice);
+				
+			}
+			
+			//从购物车中移除
+			$('small').click(function(){
+				var checkid =  $(this).attr('checkid');
+				for (var i = 0; i < jsoncookie.length; i++) {
+					if(jsoncookie[i].id == checkid){
+						jsoncookie.splice(i,1);
+						var strcookie  = JSON.stringify(jsoncookie);
+						localStorage.setItem('itemCarCookie',strcookie);
+						//商品删除后页面代码对应删除
+						$(this).parent().parent().remove();
+						console.log(i);
+						console.log(jsoncookie);
+						return false;
+					}
+					
+				}
+			});
+			init();
+    	})
+    </script>
+	<style type="text/css">
+		.addnum .jiajian{
+			border: none;
+			width: 20px;
+			height: 20px;
+			float: left;
+			line-height: 20px;
+			text-align: center;
+			font-size: 20px;
+			font-weight: 200;
+			background-color: #EEEEEE;
+			border: 1px solid #EEEEEE;
+		}
+		.addnum .num{
+			border: 1px solid #EEEEEE;
+			width: 30px;
+			height: 20px;
+			line-height: 20px;
+			display: block;
+			float: left;
+			text-align: center;
+		}
+	</style>
+</head>
+<!--loading页开始-->
+<div class="loading">
+	<div class="loader">
+        <div class="loader-inner pacman">
+          <div></div>
+          <div></div>
+          <div></div>
+          <div></div>
+          <div></div>
+        </div>
+	</div>
+</div>
+<!--loading页结束-->
+<body>
+	<header class="page-header">
+		<h3>购物车</h3>
+	</header>
+	
+	<div class="contaniner fixed-contb" id="carbody">
+	
+		 	
+	</div>
+	<!--去结算-->
+	<div style="margin-bottom: 16%;"></div>
+	<script type="text/javascript">
+		function init(){
+			/* 获取token */
+			var token = localStorage.getItem('token');
+			console.log(token);
+			//加载购物车cookie
+			var itemCarCookie =  localStorage.getItem('itemCarCookie');
+			var jsoncookie = JSON.parse(itemCarCookie);
+			var orderCookie =  localStorage.getItem('orderCookie');
+			var orderJsCookie = JSON.parse(orderCookie);
+			console.log(orderJsCookie);
+			//商品选中状态
+			$(".shopcar-checkbox label").on('touchstart',function(){
+				 var checkid =  $(this).parent().parent().find('input[type=hidden]').val();
+				var num =  $(this).parent().parent().find('input[type=hidden]').next().text();
+				
+				if($(this).hasClass('shopcar-checkd')){
+					$(this).removeClass("shopcar-checkd");
+					$(this).attr('price',0);
+					
+				}else{
+					$(this).addClass("shopcar-checkd");
+					for (var i = 0; i < jsoncookie.length; i++) {
+						if(jsoncookie[i].id == checkid){
+							$(this).attr('price',jsoncookie[i].price*num);
+							
+						}
+					}
+				}
+				//合计
+				var allprice = 0;
+				   $('#carbody').find('[price]').each(   
+				   function(){
+					   var price = $(this).attr('price');
+					   var price = parseInt(price);
+					   allprice+=price;
+					  
+				   });
+				$('#allprice').text('合计：￥'+allprice);
+				
+			})
+			
+			
+			
+			//去结算
+			$('#gopay').click(function(){
+				var itemCarCookie =  localStorage.getItem('itemCarCookie');
+				var jsoncookie = JSON.parse(itemCarCookie);
+				var orderCookie =[];
+				$('#carbody').find('.shopcar-checkd').each(
+				function(){
+				    var checkid = $(this).parent().parent().find('[checkid]').attr('checkid');
+					
+					for (var i = 0; i < jsoncookie.length; i++) {
+						if(jsoncookie[i].id == checkid ){
+							var itemcookie = {};
+							itemcookie["itemid"] = jsoncookie[i].id;
+							itemcookie["title"]  = jsoncookie[i].title;
+							itemcookie["sell_point"] = jsoncookie[i].sellpoint; 
+							itemcookie["image"] = jsoncookie[i].image; 
+							itemcookie["num"] = jsoncookie[i].num; 
+							itemcookie["price"] = jsoncookie[i].price; 
+							itemcookie["colorsize"] = jsoncookie[i].colorsize; 
+							itemcookie["catename"] = jsoncookie[i].catename;
+							orderCookie.push(itemcookie);
+							var strcookie  = JSON.stringify(orderCookie);
+							localStorage.setItem('orderCookie',strcookie);
+							
+						}
+						
+					}
+
+				});
+				console.log(orderCookie);
+				mui.ajax('http://'+getIp()+':8891/rest/user/token/'+token,{
+					data:{
+						
+					},
+					dataType:'json',//服务器返回json格式数据
+					type:'post',//HTTP请求类型
+					timeout:10000,//超时时间设置为10秒；
+					success:function(resp){
+						if(resp.data == null){
+							$('#msg').html('请先登录！');
+							$('#msg').show(0);
+							$('#msg').delay(1000).hide(0);
+							setInterval(function(){
+								location.href='login.html';
+							}, 1000);
+								
+							
+							
+						}else{
+							if($('#carbody').find('.shopcar-checkd').size()>0){
+								location.href = 'buy.html';
+							}else{
+								$('#msg').html('未选中商品！');
+								$('#msg').show(0);
+								$('#msg').delay(1000).hide(0);
+							}
+						}
+						
+					},
+					error:function(xhr,type,errorThrown){
+						console.log(type)
+					}
+				});
+				
+				
+				
+				
+			});
+		}
+	
+		//令返回失效
+		history.pushState(null, null, window.location.href)
+		window.onpopstate = function (event) {
+			   history.go(1)
+		}
+		mui.plusReady(function() {
+			//首页返回键处理
+			//处理逻辑：2秒内，连续两次按返回键，则退出应用
+			var first = null;
+			plus.key.addEventListener('backbutton', function() {
+				//首次按键，提示‘再按一次退出应用’
+				if(!first) {
+					first = new Date().getTime();
+					mui.toast('再按一次退出应用');
+					setTimeout(function() {
+						first = null;
+					}, 2000);
+				} else {
+					if(new Date().getTime() - first < 2000) {
+						plus.runtime.quit();
+					}
+				}
+			}, false);
+		});
+		
+	</script>
+	<footer class="page-footer fixed-footer">
+		<div class="shop-go">
+			<b id="allprice">合计：￥0</b>
+			<span><a  id="gopay">去结算</a></span>
+		</div>
+		<ul>
+			<li>
+				<a href="index.html">
+					<img src="images/footer001.png"/>
+					<p>首页</p>
+				</a>
+			</li>
+			<li>
+				<a href="assort.html">
+					<img src="images/footer002.png"/>
+					<p>分类</p>
+				</a>
+			</li>
+			<li class="active">
+				<a href="shopcar.html">
+					<img src="images/footer03.png"/>
+					<p>购物车</p>
+				</a>
+			</li>
+			<li>
+				<a href="self.html">
+					<img src="images/footer004.png"/>
+					<p>个人中心</p>
+				</a>
+			</li>
+		</ul>
+	</footer>
+	
+	
+</body>
+
+</html>

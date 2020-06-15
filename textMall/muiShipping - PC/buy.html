@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    
+        <meta name="format-detection" content="telephone=no" />
+    <title>结算</title>
+    <link rel="stylesheet" type="text/css" href="css/loaders.min.css"/>
+    <link rel="stylesheet" type="text/css" href="css/loading.css"/>
+    <link rel="stylesheet" type="text/css" href="css/base.css"/>
+    <link rel="stylesheet" type="text/css" href="css/style.css"/>
+    <script src="js/jquery.min.js" type="text/javascript" charset="utf-8"></script>
+    <script src="js/mui.min.js" type="text/javascript" charset="utf-8"></script>
+	<script src="js/public.js" type="text/javascript" charset="utf-8"></script>
+	<style type="text/css">
+		.titleHide{
+			height: 40px;
+			overflow:hidden;
+		}
+	</style>
+    <script type="text/javascript">
+		
+		window.addEventListener('pageshow', function(){
+			if(sessionStorage.getItem('need-refresh')){
+			location.reload();
+			sessionStorage.removeItem('need-refresh');
+			}
+		});
+    	$(window).load(function(){
+    		$(".loading").addClass("loader-chanage")
+    		$(".loading").fadeOut(300)
+			//消息弹框
+			msgBox();
+			/* 获取用户token信息 */
+			var token = localStorage.getItem('token');
+			console.log(token);
+			var userId;
+			mui.ajax('http://'+getIp()+':8891/rest/user/token/'+token,{
+				data:{
+					
+				},
+				dataType:'json',//服务器返回json格式数据
+				type:'post',//HTTP请求类型
+				timeout:10000,//超时时间设置为10秒；
+				success:function(resp){
+					var data = resp.data;
+					console.log(data);
+					if (resp.status == 200) {
+						$('[name=userid]').val(data.id);
+						userId = data.id;
+						$('[name=buyerNick]').val(data.username);
+						okload();
+					} else{
+						$('#msg').html('请先登录！');
+						$('#msg').show(0);
+						$('#msg').delay(1000).hide(0);
+						setInterval(function(){
+							location.href='login.html';
+						}, 1000);
+					}
+				},
+				error:function(xhr,type,errorThrown){
+					console.log(type);
+				}
+			});
+			//加载地址列表
+			/* 加载收货地址 */
+			function okload(){
+				mui.ajax('http://'+getIp()+':8894/order/getAddressByUserId',{
+						data:{
+							userid:userId
+						},
+						dataType:'json',//服务器返回json格式数据
+						type:'get',//HTTP请求类型
+						timeout:10000,//超时时间设置为10秒；
+						headers:{'Content-Type':'application/json'},	              
+						success:function(response){
+							//服务器返回响应，根据响应结果，
+							var data = response.data;
+							str = '';		
+							console.log(data);
+							for(var i =0;i <data.length;i++){
+								str+='<div class="to-now">';
+								str+='	<div class="tonow">';
+								str+='			<label for="tonow"  onselectstart="return false" ></label>';
+								str+='			<input type="checkbox" />';
+								str+='	</div>';
+								str+='	<dl>';
+								str+='			<dt>';
+								str+='				<b names = "name">'+data[i].name+'</b>';
+								str+='				<strong names="phone">'+data[i].phone+'</strong>';
+								str+='			</dt>';
+								str+='			<dd names = "province">'+data[i].province+'</dd>';
+								str+='			<dd names = "city">'+data[i].city+'</dd>';
+								str+='			<dd names = "county">'+data[i].county+'</dd>';
+								str+='			<dd names = "address">'+data[i].address+'</dd>';
+								str+='	</dl>';
+								str+='	<h3><a href="upd-address.html?addId='+data[i].addId+'"><img src="images/write.png"/></a></h3>';
+								str+='</div>';
+								if(data[i].status ==1){
+									$('.now').find('[name=receiverName]').text(data[i].name);
+									$('.now').find('[name=receiverMobile]').text(data[i].phone);
+									$('.now').find('[name=receiverState]').text(data[i].province);
+									$('.now').find('[name=receiverCity]').text(data[i].city);
+									$('.now').find('[name=receiverDistrict]').text(data[i].county);
+									$('.now').find('[name=receiverAddress]').text(data[i].address);
+								}
+								
+							}
+							$('#address').append(str);
+							init();
+						},
+						error:function(xhr,type,errorThrown){
+							//异常处理；
+							console.log(type);
+						}
+				});	
+				/* 订单渲染 */
+				var orderCookie = localStorage.getItem('orderCookie');
+				var jsonOrderCookie = JSON.parse(orderCookie);
+				var itemCarCookie =  localStorage.getItem('itemCarCookie');
+				jsonCarCookie = JSON.parse(itemCarCookie);
+				console.log(jsonOrderCookie);
+				str='';
+				allprice = 0;
+				for (var i = 0; i < jsonOrderCookie.length; i++) {
+					var price = jsonOrderCookie[i].price*jsonOrderCookie[i].num;
+					allprice +=price;
+					str+='<ul>';
+					str+='	<a href="detail.html">';
+					str+='		<figure>';
+					str+='			<img src="'+jsonOrderCookie[i].image+'"/>';
+					str+='		</figure>';
+					str+='		<li>';
+					str+='			<h3 class="titleHide">'+jsonOrderCookie[i].title+'</h3>';
+					str+='			<span>'+jsonOrderCookie[i].colorsize+'</span>';
+					str+='			<b>￥'+jsonOrderCookie[i].price+'</b>';
+					str+='			<small>×'+jsonOrderCookie[i].num+'</small>';
+					str+='		</li>';
+					str+='	</a>';
+					str+='</ul>';
+				}
+				str+='<dl>';
+				str+='	<dd>';
+				str+='		<span>运费</span>';
+				str+='		<small>包邮</small>';
+				str+='	</dd>';
+				str+='	<dd>';
+				str+='		<span>商品总额</span>';
+				str+='		<small price = "'+allprice+'">';
+				str+='			￥'+allprice+'</small>';
+				str+='	</dd>';
+				str+='	<dt>';
+				str+='		<textarea rows="4" name="buyerMessage" maxlength="50" placeholder="给卖家留言（50字以内）"></textarea>';
+				str+='	</dt>';
+				str+='</dl>';
+				$('.buy-list').append(str);
+				
+				//商品数据
+				var orderCookie1 =[];
+				for (var i = 0; i < jsonOrderCookie.length; i++) {
+					var itemcookie = {};
+						itemcookie["itemId"] = jsonOrderCookie[i].itemid;
+						itemcookie["num"]  = jsonOrderCookie[i].num;
+						itemcookie["title"] = jsonOrderCookie[i].title; 
+						itemcookie["price"] = jsonOrderCookie[i].price*100; 
+						itemcookie["totalFee"] = jsonOrderCookie[i].price*jsonOrderCookie[i].num*100; 
+						itemcookie["picPath"] = jsonOrderCookie[i].image; 
+						itemcookie["status"]  =0;
+						orderCookie1.push(itemcookie);
+				}
+				console.log(orderCookie1);
+				
+				
+				/* 提交订单 */
+				$('#gopay').click(function(){
+					//获取表单数据
+					var payment = $('[name=payment]').attr('payment');
+					var userId = $('[name=userid]').val();
+					var buyerNick = $('[name=buyerNick]').val();
+					var buyerMessage = $('[name=buyerMessage]').val();
+					var receiverName = $('[name=receiverName]').text();
+					var receiverMobile = $('[name=receiverMobile]').text();
+					var receiverState = $('[name=receiverState]').text();
+					var receiverCity = $('[name=receiverCity]').text();
+					var receiverDistrict = $('[name=receiverDistrict]').text();
+					var receiverAddress = $('[name=receiverAddress]').text();
+					mui.ajax('http://'+getIp()+':8894/order/create',{
+							data:JSON.stringify( {
+								"payment":payment*100 ,//订单总额
+								"postFee": 0,//支付状态
+								"userId": userId,//登录的id
+								"buyerMessage": buyerMessage,//买家留言
+								"buyerNick": buyerNick,//登录的用户名
+								"orderItems": orderCookie1,
+								"orderShipping": {
+									"receiverName": receiverName,//收货人
+									"receiverPhone": "",
+									"receiverMobile": receiverMobile,
+									"receiverState": receiverState,
+									"receiverCity": receiverCity,
+									"receiverDistrict": receiverDistrict,
+									"receiverAddress": receiverAddress,
+									"receiverZip": ""
+								}
+							}),
+							dataType:'json',//服务器返回json格式数据
+							type:'post',//HTTP请求类型
+							timeout:10000,//超时时间设置为10秒；
+							headers:{'Content-Type':'application/json'},	              
+							success:function(resp){
+								//服务器返回响应，根据响应结果，
+								if(resp.status ==200){
+									$('#msg').html('下单成功，未支付！');
+									$('#msg').show(0);
+									$('#msg').delay(1000).hide(0);
+									
+									delCookie('orderCookie');
+									for (var i = 0; i < jsonOrderCookie.length; i++) {
+										console.log(jsonOrderCookie[i])
+										for (var j = 0; j < jsonCarCookie.length; j++) {
+											if(jsonOrderCookie[i].itemid ==jsonCarCookie[j].id ){
+												jsonCarCookie.splice(j,1);
+												var strcookie  = JSON.stringify(jsonCarCookie);
+												localStorage.setItem('itemCarCookie',strcookie);
+											
+											}
+										}
+										
+									}
+									setInterval(function(){
+										location.href='orderthree.html';
+									}, 1000);
+								}else{
+									$('#msg').html('订单未完成！');
+									$('#msg').show(0);
+									$('#msg').delay(1000).hide(0);
+									setInterval(function(){
+										history.back();
+									}, 1000);
+								}
+								
+							},
+							error:function(xhr,type,errorThrown){
+								//异常处理；
+								console.log(type);
+							},
+							
+					});	
+				});
+			
+			}
+    		
+    		
+    	})
+    </script>
+</head>
+<!--loading页开始-->
+<div class="loading">
+	<div class="loader">
+        <div class="loader-inner pacman">
+          <div></div>
+          <div></div>
+          <div></div>
+          <div></div>
+          <div></div>
+        </div>
+	</div>
+</div>
+<!--loading页结束-->
+<body>
+	<header class="top-header fixed-header">
+			<a class="icona" href="javascript:history.go(-1)">
+					<img src="images/left.png"/>
+			</a>
+			<h3>结算</h3>
+			<a class="iconb" >
+			</a>
+	</header>
+	
+	<div class="contaniner fixed-cont">
+		
+		<section class="to-buy">
+			<input type="hidden" name="userid" id="" value="" />
+			<input type="hidden" name="buyerNick" id="" value="" />
+			<header id="address">
+				<div class="now">
+					<span><img src="images/map-icon.png"/></span>
+						<dl>
+							<dt>
+								<b  name="receiverName" >吴发亿</b>
+								<strong name="receiverMobile">18596772333</strong>
+							</dt>
+							<dd style="display: block; float: left;" name="receiverState"> </dd>
+							<dd style="display: block; float: left;" name="receiverCity"> </dd>
+							<dd style="display: block; float: left;" name="receiverDistrict" > </dd>
+							<dd style="display: block; float: left;" name="receiverAddress"> </dd>
+							<p id="oraddr">其他地址</p>
+						</dl>
+				</div>
+				
+				
+				
+			</header>
+			<div class="buy-list">
+				
+			</div>
+			
+		</section>
+		<!--底部不够-->
+		<div style="margin-bottom: 9%;"></div>
+	</div>
+	
+	<footer class="buy-footer fixed-footer">
+			<p> 
+				<small>总金额</small>
+				<b id="allprice" name='payment'>￥0</b>
+			</p>
+				
+				<input type="button" id="gopay" value="付款"/>
+	</footer>
+	
+	<script type="text/javascript">
+		function init(){
+			$('.to-now').hide();
+			$('#oraddr').click(function(){
+				$('.to-now').toggle();
+			})
+			$(".to-now .tonow label").on('touchstart',function(){
+				$(this).addClass("ton");
+				$(".to-now .tonow label").not($(this)).removeClass("ton");
+				//把选中的地址选成默认地址
+				var name = $(this).parent().parent().find('[names=name]').text();
+				var phone = $(this).parent().parent().find('[names=phone]').text();
+				var province = $(this).parent().parent().find('[names=province]').text();
+				var city = $(this).parent().parent().find('[names=city]').text();
+				var county = $(this).parent().parent().find('[names=county]').text();	
+				var address = $(this).parent().parent().find('[names=address]').text();
+				$('.now').find('[name=receiverName]').text(name);
+				$('.now').find('[name=receiverMobile]').text(phone);
+				$('.now').find('[name=receiverState]').text(province);
+				$('.now').find('[name=receiverCity]').text(city);
+				$('.now').find('[name=receiverDistrict]').text(county);
+				$('.now').find('[name=receiverAddress]').text(address);
+			})
+			//合计
+			var allprice = 0;
+			   $('.buy-list').find('[price]').each(   
+			   function(){
+				   var price = $(this).attr('price');
+				   var price = parseInt(price);
+				   allprice+=price;
+				  
+			   });
+			$('#allprice').text('合计：￥'+allprice);
+			$('#allprice').attr('payment',allprice);
+			
+		}
+		
+	</script>
+
+</body>
+</html>

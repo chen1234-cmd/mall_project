@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="format-detection" content="telephone=no" />
+    <title>申请退款</title>
+    <link rel="stylesheet" type="text/css" href="css/loaders.min.css"/>
+    <link rel="stylesheet" type="text/css" href="css/loading.css"/>
+    <link rel="stylesheet" type="text/css" href="css/base.css"/>
+    <link rel="stylesheet" type="text/css" href="css/style.css"/>
+    <script src="js/jquery.min.js" type="text/javascript" charset="utf-8"></script>
+	<script src="js/mui.min.js" type="text/javascript" charset="utf-8"></script>
+	<script src="js/public.js" type="text/javascript" charset="utf-8"></script>
+    <script type="text/javascript">
+    	$(window).load(function(){
+    		$(".loading").addClass("loader-chanage")
+    		$(".loading").fadeOut(300)
+			//获取地址栏orderId参数值
+			var orderId =parseInt( GetQueryValue('orderId'));
+			var itemId =parseInt( GetQueryValue('itemId'));
+			console.log(itemId);
+			console.log(orderId);
+			var orderCookie1 =[];
+			//填充页面
+			mui.ajax('http://'+getIp()+':8894/order/getOrderByOrderId',{
+				data:{
+					orderId:orderId
+				},
+				dataType:'json',//服务器返回json格式数据
+				type:'post',//HTTP请求类型
+				timeout:10000,//超时时间设置为10秒；
+				success:function(resp){
+					var data = resp.data;
+					if(resp.status == 200){
+						str='';
+						str+='<ul>';
+						str+='	<li>';
+						str+='		<span>商品总额</span>';
+						str+='		<small>￥'+data.payment/100+'</small>';
+						str+='	</li>';
+						str+='	<li>';
+						str+='		<p>';
+						str+='			下单时间：'+new Date(data.updateTime).Format('yy-MM-dd hh:mm:ss');+'';
+						str+='			<br />订单编号：'+data.orderId+'';
+						str+='		</p>';
+						str+='	</li>';
+						str+='</ul>';
+						$('.order-shop').append(str);
+						if(Number.isNaN(itemId)){
+							console.log("itemId==null")
+							for (var j in data.orderItems) {
+								var itemcookie = {};
+								itemcookie["itemId"] = data.orderItems[j].itemId;
+								itemcookie["status"]  = 1;
+								orderCookie1.push(itemcookie);
+							}
+						}else{
+							console.log("itemId!=null")
+							var itemcookie = {};
+							itemcookie["itemId"] = itemId;
+							itemcookie["status"]  = 1;
+							orderCookie1.push(itemcookie);
+						}
+						console.log(orderCookie1);
+						
+						tuik();
+					}
+				
+				},
+				error:function(xhr,type,errorThrown){
+					console.log(type);
+				}
+			});
+			
+				
+			
+	//修改数据库订单状态,tatus改为2,支付成功//支付方式paymentType 1在线支付，2货到付款
+	//'状态status：1、未付款，2、已付款，3、未发货，4、已发货，5、交易成功，6、交易关闭，7、申请退款'
+			function tuik(){
+				mui.ajax('http://'+getIp()+':8894/order/orderBack',{
+					// data:{
+					// 	orderId:orderId,
+					// 	paymentType:0,
+					// 	status:7
+					// },
+					data:JSON.stringify( {
+						"orderId":orderId,
+						"status": 7,
+						"orderItems": orderCookie1
+					}),
+					dataType:'json',//服务器返回json格式数据
+					type:'post',//HTTP请求类型
+					timeout:10000,//超时时间设置为10秒；
+					headers:{'Content-Type':'application/json'},	     
+					success:function(resp){
+						var data = resp.data;
+						if(resp.status == 200){
+							$('#status').text('已申请退款，等待处理！');
+							var i=1;
+							setInterval(function(){
+								$('#times').text(i);
+								i--;
+								if(i<=0){
+									i=0
+									setInterval(function(){
+										location.href='self.html';
+									}, 1000);
+								}
+							}, 1000);
+						}else{
+							$('#status').text('出现异常！');
+						}
+					},
+					error:function(xhr,type,errorThrown){
+						console.log(type);
+					}
+				});
+			}
+			
+			
+			
+			
+    	})
+    </script>
+</head>
+<!--loading页开始-->
+<div class="loading">
+	<div class="loader">
+        <div class="loader-inner pacman">
+          <div></div>
+          <div></div>
+          <div></div>
+          <div></div>
+          <div></div>
+        </div>
+	</div>
+</div>
+<!--loading页结束-->
+<body>
+	<header class="top-header fixed-header">
+		<a class="icona" href="javascript:history.go(-1)">
+				<img src="images/left.png"/>
+			</a>
+		<h3>申请退款</h3>
+			
+			<a class="iconb" href="shopcar.html">
+			</a>
+	</header>
+	
+	<div class="contaniner fixed-cont">
+		<section class="go-order">
+			<h3>
+				<img src="images/b-iocn02.png"/>
+				<span id="status">已申请退款</span>
+				<span id="times">2</span>  秒后跳转
+			</h3>
+			
+			<div class="order-shop">
+				
+			</div>
+		</section>
+	</div>
+	
+
+</body>
+</html>

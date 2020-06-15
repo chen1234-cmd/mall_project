@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>添加地址</title>
+    <link rel="stylesheet" type="text/css" href="css/loaders.min.css"/>
+    <link rel="stylesheet" type="text/css" href="css/loading.css"/>
+    <link rel="stylesheet" type="text/css" href="css/base.css"/>
+    <link rel="stylesheet" type="text/css" href="css/style.css"/>
+      <script src="js/jquery.min.js" type="text/javascript" charset="utf-8"></script>
+	  <script src="js/mui.min.js" type="text/javascript" charset="utf-8"></script>
+	  <script src="js/public.js" type="text/javascript" charset="utf-8"></script>
+	  <style type="text/css">
+	  	select{
+			width: 200px;
+			display: inline;
+			margin-bottom: 10px;
+		}
+		#city1{
+			width: 200px;
+			
+		}
+	  </style>
+    <script type="text/javascript">
+    	$(window).load(function(){
+    		$(".loading").addClass("loader-chanage")
+    		$(".loading").fadeOut(300)
+			msgBox();
+			
+    	})
+    </script>
+</head>
+<!--loading页开始-->
+<div class="loading">
+	<div class="loader">
+        <div class="loader-inner pacman">
+          <div></div>
+          <div></div>
+          <div></div>
+          <div></div>
+          <div></div>
+        </div>
+	</div>
+</div>
+<!--loading页结束-->
+<body>
+	<header class="top-header fixed-header">
+		<a class="icona" href="javascript:history.go(-1)">
+				<img src="images/left.png"/>
+			</a>
+		<h3>添加地址</h3>
+			
+			<a class="text-top" >
+			</a>
+	</header>
+	
+	<div class="contaniner fixed-conta">
+		<form action="" onsubmit="return false" method="post" class="change-address" id="save">
+			<ul>
+				<li>
+					<label class="addd">收货人：</label>
+					<input type="text" name="name" value="" required="required"/>
+				</li>
+				<li>
+					<label class="addd">手机号：</label>
+					<input type="tel" name="phone" maxlength="11" value="" required="required"/>
+				</li>
+				<li>
+					<label class="addd">所在地区：</label>
+					<div id="city1">
+						<select  id="province"  >
+							
+						</select>
+						<select id="city">
+							
+						</select>
+						<select id="county">
+							
+						</select>
+					</div>
+					
+				</li>
+				<li>
+					<label class="addd">详细地址：</label>
+					<textarea id="address" required="required"></textarea>
+				</li>
+			</ul>
+			
+			<ul>
+				<li class="checkboxa">
+					<input type="checkbox" id="check"/>
+					<label class="check" for="check" onselectstart="return false"  >设置为默认地址</label>
+				</li>
+			</ul>
+			<ul>
+				<li>
+					<h3>删除此地址</h3>
+				</li>
+			</ul>
+			<input type="submit" id="submit" value="添加" />
+		</form>
+	</div>
+	
+	<script src="js/jquery.min.js" type="text/javascript" charset="utf-8"></script>
+	<script type="text/javascript">
+		$(".checkboxa label").on('touchstart',function(){
+			if($(this).hasClass('checkd')){
+				$(".checkboxa label").removeClass("checkd");
+			}else{
+				$(".checkboxa label").addClass("checkd");
+			}
+		})
+		//获取token信息
+		var token = localStorage.getItem('token');
+		console.log(token);
+		var userId;
+		mui.ajax('http://'+getIp()+':8891/rest/user/token/'+token,{
+			data:{
+				
+			},
+			dataType:'json',//服务器返回json格式数据
+			type:'post',//HTTP请求类型
+			timeout:10000,//超时时间设置为10秒；
+			async:false,
+			success:function(resp){
+				var data = resp.data;
+				console.log(data);
+				if (resp.status == 200) {
+					userId = data.id;
+					lload();
+				} else{
+						$('#msg').html('请先登录！');
+						$('#msg').show(0);
+						$('#msg').delay(1000).hide(0);
+						return false;
+				}
+			},
+			error:function(xhr,type,errorThrown){
+				console.log(type);
+			}
+		});
+		function lload() {
+			$('#submit').click(function(){
+				var name = $('[name=name]').val();
+				var phone = $('[name=phone]').val();
+				var province = $('#province').val();
+				var city = $('#city').val();
+				var county = $('#county').val();
+				var address = $('#address').val();
+				var check = $('#check:checked').length;
+				
+				if(city==''||city==null||address==''||name==''||phone==''){
+					$('#msg').html('请完善信息后提交！');
+					$('#msg').show(0);
+					$('#msg').delay(1000).hide(0);
+				}else{
+					mui.ajax('http://'+getIp()+':8894/order/newaddress',{
+						data:{
+							name:name,
+							phone:phone,
+							province:province,
+							city:city,
+							county:county,
+							address:address,
+							status:check,
+							userid:userId
+						},
+						dataType:'json',//服务器返回json格式数据
+						type:'post',//HTTP请求类型
+						timeout:10000,//超时时间设置为10秒；
+						success:function(resp){
+							var data = resp.data;
+							if(resp.status == 200){
+								$('#msg').html('添加成功！');
+								$('#msg').show(0);
+								$('#msg').delay(1000).hide(0);
+								setInterval(function(){
+									location.href = "addres.html";
+								},1000)
+							}
+						},
+						error:function(xhr,type,errorThrown){
+							console.log(type)
+						}
+					});
+				}
+				
+			});
+		}
+		//一级地址加载
+		$('#city').hide();
+		$('#county').hide();
+		mui.ajax('http://'+getIp()+':8894/order/getchina',{
+			data:{
+				pid:0
+			},
+			dataType:'json',//服务器返回json格式数据
+			type:'post',//HTTP请求类型
+			timeout:10000,//超时时间设置为10秒；
+			success:function(resp){
+				var data = resp.data;
+				console.log(data);
+				str='';
+				for (var i = 0; i < data.length; i++) {
+					str+='<option idd="'+data[i].id+'">'+data[i].name+'</option>';
+				}
+				$('#province').html(str);
+				
+			},
+			error:function(xhr,type,errorThrown){
+				console.log(type)
+			}
+		});
+		$('#province').change(function (){
+			var province = $('#province').val();
+			var idd = $('#province').find("option:selected").attr('idd');
+			$('#city').html("");
+			$('#county').html("");
+			$('#city').hide(100);
+			$('#county').hide(100);
+			//加载二级地址
+			if(idd!=0){
+				mui.ajax('http://'+getIp()+':8894/order/getchina',{
+					data:{
+						pid:idd
+					},
+					dataType:'json',//服务器返回json格式数据
+					type:'post',//HTTP请求类型
+					timeout:10000,//超时时间设置为10秒；
+					success:function(resp){
+						var data = resp.data;
+						console.log(data);
+						str='';
+						for (var i = 0; i < data.length; i++) {
+							str+='<option idd="'+data[i].id+'">'+data[i].name+'</option>';
+						}
+						$('#city').html(str);
+						$('#city').show(100);
+						county();
+					},
+					error:function(xhr,type,errorThrown){
+						console.log(type)
+					}
+				});
+			}
+			
+		})
+		$('#city').change(function(){
+			county();
+		})
+		function county(){
+			var city = $('#city').val();
+			var idd = $('#city').find("option:selected").attr('idd');
+			console.log(idd);
+			$('#county').html("");
+			$('#county').hide(100);
+			//加载三级地址
+			mui.ajax('http://'+getIp()+':8894/order/getchina',{
+				data:{
+					pid:idd
+				},
+				dataType:'json',//服务器返回json格式数据
+				type:'post',//HTTP请求类型
+				timeout:10000,//超时时间设置为10秒；
+				success:function(resp){
+					var data = resp.data;
+					console.log(data);
+					str='';
+					for (var i = 0; i < data.length; i++) {
+						str+='<option idd="'+data[i].id+'">'+data[i].name+'</option>';
+					}
+					$('#county').html(str);
+					$('#county').show(100);
+				},
+				error:function(xhr,type,errorThrown){
+					console.log(type)
+				}
+			});
+			
+		}
+		
+		
+		
+	</script>
+	
+
+</body>
+</html>

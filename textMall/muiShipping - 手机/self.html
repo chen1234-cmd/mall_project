@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>个人中心</title>
+    <link rel="stylesheet" type="text/css" href="css/loaders.min.css"/>
+    <link rel="stylesheet" type="text/css" href="css/loading.css"/>
+    <link rel="stylesheet" type="text/css" href="css/base.css"/>
+    <link rel="stylesheet" type="text/css" href="css/style.css"/>
+      <script src="js/jquery.min.js" type="text/javascript" charset="utf-8"></script>
+	  <script src="js/mui.min.js" type="text/javascript" charset="utf-8"></script>
+	  <script src="js/public.js" type="text/javascript" charset="utf-8"></script>
+    <script type="text/javascript">
+    	$(window).load(function(){
+    		$(".loading").addClass("loader-chanage")
+    		$(".loading").fadeOut(300)
+			//初始化消息弹窗
+			 msgBox();
+			
+			/* 判断是否登录 */
+			var token = localStorage.getItem('token');
+			console.log(token);
+			var userId;
+			if(token!=null&&token!=''){
+				mui.ajax('http://'+getIp()+':8891/rest/user/token/'+token,{
+					data:{
+						
+					},
+					dataType:'json',//服务器返回json格式数据
+					type:'post',//HTTP请求类型
+					timeout:10000,//超时时间设置为10秒；
+					success:function(resp){
+						var data = resp.data;
+						console.log(data);
+						if (resp.status == 200) {
+							$('.name').text(data.username);
+							$('.tu img').attr('src',data.face)
+							userId = data.id;
+							$('[name=userok]').show()
+							orderload();
+						} else{
+							$('#login').click(function(){
+								location.href = 'login.html';
+							})
+							$('a').not($('.page-footer').find('a')).click(function(){
+								$('a').not($('.p-top').find('a')).click(function(){
+									$('#msg').html('请先登录！');
+									$('#msg').show(0);
+									$('#msg').delay(1000).hide(0);
+								})
+								return false;
+							})
+							
+							
+						}
+					},
+					error:function(xhr,type,errorThrown){
+						console.log(type);
+					}
+				});
+			}else{
+							$('#login').click(function(){
+								location.href = 'login.html';
+							})
+							$('a').not($('.page-footer').find('a')).click(function(){
+								$('a').not($('.p-top').find('a')).click(function(){
+									$('#msg').html('请先登录！');
+									$('#msg').show(0);
+									$('#msg').delay(1000).hide(0);
+								})
+								return false;
+							})
+							
+							
+			}
+			//根据userId查询订单
+			function orderload(){
+				mui.ajax('http://'+getIp()+':8894/order/getOrderByUserId',{
+					data:{
+						userId:userId
+					},
+					dataType:'json',//服务器返回json格式数据
+					type:'post',//HTTP请求类型
+					timeout:10000,//超时时间设置为10秒；
+					success:function(resp){
+						var data = resp.data;
+						console.log(data);
+						var a=0,b=0,c=0,d=0;
+						
+						for (var i = 0; i < data.length; i++) {
+							switch (data[i].status){
+								case 1:
+									a++;
+									break;
+								case 2:case 3:
+									b++;
+									break;
+								case 4:
+									c++;
+									break;
+								case 5:
+									if(data[i].buyerRate == 0){
+										d++;
+									}
+									break;
+							}
+						}
+						$('span.num').eq(0).text(a);
+						$('span.num').eq(1).text(b);
+						$('span.num').eq(2).text(c);
+						$('span.num').eq(3).text(d);
+						//如果小红点消息为0则隐藏
+						$('span.num').each(function(){
+							if(parseInt($(this).text())==0){
+								$(this).hide();
+							}else{
+								$(this).show();
+							}
+						})
+					},
+					error:function(xhr,type,errorThrown){
+						console.log(type);
+					}
+				});
+			}
+			//如果小红点消息为0则隐藏
+			$('span.num').each(function(){
+				if(parseInt($(this).text())==0){
+					$(this).hide();
+				}else{
+					$(this).show();
+				}
+			})
+			//退出登录
+			$('#userOut').click(function(){
+				localStorage.removeItem('token');
+				mui.toast('已退出');
+				setInterval(function(){
+					window.location.reload();
+				}, 1000);
+				
+			});
+			
+    	})
+		 //令返回失效
+		 history.pushState(null, null, window.location.href)
+		 window.onpopstate = function (event) {
+		 	   history.go(1)
+		 }
+		 mui.plusReady(function() {
+		 	//首页返回键处理
+		 	//处理逻辑：2秒内，连续两次按返回键，则退出应用
+		 	var first = null;
+		 	plus.key.addEventListener('backbutton', function() {
+		 		//首次按键，提示‘再按一次退出应用’
+		 		if(!first) {
+		 			first = new Date().getTime();
+		 			mui.toast('再按一次退出应用');
+		 			setTimeout(function() {
+		 				first = null;
+		 			}, 2000);
+		 		} else {
+		 			if(new Date().getTime() - first < 2000) {
+		 				plus.runtime.quit();
+		 			}
+		 		}
+		 	}, false);
+		 });
+    </script>
+	<style type="text/css">
+		span.num{
+			position: relative;
+			
+			bottom: 85px;
+			left: 50px;
+			display: block;
+			width: 20px;
+			height: 20px;
+			color: white;
+			line-height: 20px;
+			text-align: center;
+			border-radius: 30px;
+			background-color: red;
+		}
+	</style>
+</head>
+<!--loading页开始-->
+<div class="loading">
+	<div class="loader">
+        <div class="loader-inner pacman">
+          <div></div>
+          <div></div>
+          <div></div>
+          <div></div>
+          <div></div>
+        </div>
+	</div>
+</div>
+<!--loading页结束-->
+<body>
+	<!-- <header class="self-header">
+		<figure><img src="images/self-tou.png"/></figure>
+		<dl>
+			<dt>瑾晨</dt>
+			<dd>
+				<img src="images/self-header.png"/>
+				<span>5684</span>
+				<span>炒饭大湿</span>
+			</dd>
+		</dl>
+		<button>签到</button>
+	</header> -->
+
+	<div class="p-top  clearfloat">
+		<a href="javascript:;" id="login">
+			<div class="tu">
+				<img src="img/touxiang.png"/>
+			</div>
+			<p class="name">未登录</p>
+		</a>
+	</div>
+	
+	<div class="contaniner fixed-contb">
+		<section class="self">
+			<dl>
+				<dt>
+					<a href="order.html">
+						<img src="images/self-icon.png"/>
+						<b>全部订单</b>
+						<span><img src="images/right.png"/></span>
+					</a>
+				</dt>
+				<dd>
+						<ul>
+							<li>
+								<a href="orderthree.html">
+									<img src="images/order-icon03.png"/>
+									<p>待付款</p>
+								</a>
+								<span class="num">0</span>
+							</li>
+							<li>
+								<a href="ordertwo.html">
+									<img src="images/order-icon01.png"/>
+									<p>待发货</p>
+								</a>
+								<span  class="num">0</span>
+							</li>
+							<li>
+								<a href="orderfour.html">
+									<img src="images/order-icon02.png"/>
+									<p>待收货</p>
+								</a>
+								<span class="num">0</span>
+							</li>
+							<li>
+								<a href="go-assess.html">
+									<img src="images/order-icon04.png"/>
+									<p>待评价</p>
+								</a>
+								<span class="num">0</span>
+							</li>
+						</ul>
+				</dd>
+			</dl>
+			
+			<ul class="self-icon">
+				<li>
+					<a href="datum.html">
+						<img src="images/self-icon01.png"/>
+						<p>个人信息</p>
+						<span><img src="images/right.png"/></span>
+					</a>
+				</li>
+				<li>
+					<a href="mycollect.html">
+						<img src="images/self-icon02.png"/>
+						<p>我的收藏</p>
+						<span><img src="images/right.png"/></span>
+					</a>
+				</li>
+				<li>
+					<a href="addres.html">
+						<img src="images/self-icon04.png"/>
+						<p>地址管理</p>
+						<span><img src="images/right.png"/></span>
+					</a>
+				</li>
+			</ul>
+			<ul class="self-icon" hidden name="userok" >
+				<li>
+					<a href="sign.html">
+						<img src="images/self-icon011.png"/>
+						<p>修改密码</p>
+						<span><img src="images/right.png"/></span>
+					</a>
+				</li>
+				<li>
+					<a href="order1.html">
+						<img src="images/self-icon06.png"/>
+						<p>模拟卖家发货</p>
+						<span><img src="images/right.png"/></span>
+					</a>
+				</li>
+			</ul>
+			
+				
+			
+			<a href="javascript:;" hidden name="userok" id="userOut"><input type="button" value="退出" /></a>
+			
+		</section>
+		
+		
+	</div>
+	
+	<footer class="page-footer fixed-footer">
+		<ul>
+			<li>
+				<a href="index.html"  >
+					<img src="images/footer001.png"/>
+					<p>首页</p>
+				</a>
+			</li>
+			<li>
+				<a href="assort.html" >
+					<img src="images/footer002.png"/>
+					<p>分类</p>
+				</a>
+			</li>
+			<li>
+				<a href="shopcar.html" >
+					<img src="images/footer003.png"/>
+					<p>购物车</p>
+				</a>
+			</li>
+			<li class="active" >
+				<a href="self.html">
+					<img src="images/footer04.png"/>
+					<p>个人中心</p>
+				</a>
+			</li>
+		</ul>
+	</footer>
+	
+	
+</body>
+</html>

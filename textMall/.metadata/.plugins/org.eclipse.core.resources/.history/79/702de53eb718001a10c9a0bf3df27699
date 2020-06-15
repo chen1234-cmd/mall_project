@@ -1,0 +1,114 @@
+package org.nzy.rest.service.impl;
+
+import java.util.Date;
+import java.util.List;
+import java.util.UUID;
+
+import javax.annotation.Resource;
+
+import org.apache.commons.lang3.StringUtils;
+import org.nzy.mapper.TbUserMapper;
+import org.nzy.pojo.FjnyResult;
+import org.nzy.pojo.TbUser;
+import org.nzy.pojo.TbUserExample;
+import org.nzy.pojo.TbUserExample.Criteria;
+import org.nzy.rest.dao.JedisClient;
+import org.nzy.rest.service.UserLoginService;
+import org.nzy.utils.JsonUtils;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+import org.springframework.util.DigestUtils;
+@Service
+public class UserLoginServiceImpl implements UserLoginService {
+	
+	@Value("${USER_TOKEN_KEY}")
+	private String USER_TOKEN_KEY;
+	@Value("${SESSION_EXPIRE_TIME}")
+	private Integer SESSION_EXPIRE_TIME;
+	@Value("${USER_TOKEN_EXPIRE_KEY}")
+	private String USER_TOKEN_EXPIRE_KEY;
+	
+	@Resource
+	private TbUserMapper tbUserMapper;
+	
+	@Resource
+	private JedisClient jedisClient;
+
+	//登录
+	@Override
+	public FjnyResult login(String username, String password) {
+		TbUserExample example = new TbUserExample();
+		Criteria criteria = example.createCriteria();
+		criteria.andUsernameEqualTo(username);
+		//密码转成MD5
+		String md5password = DigestUtils.md5DigestAsHex(password.getBytes());
+		criteria.andPasswordEqualTo(md5password);
+		List<TbUser> list = tbUserMapper.selectByExample(example );
+		if(list!=null && list.size() > 0) {
+			//账号密码验证通过
+			TbUser tbUser = list.get(0);
+			//生成token，将token，TbUser信息保存到redis里面
+			UUID token = UUID.randomUUID();
+			jedisClient.set(USER_TOKEN_KEY+":"+token.toString(), 
+					JsonUtils.objectToJson(tbUser));
+			jedisClient.expire(USER_TOKEN_EXPIRE_KEY+":"+
+					token.toString(), SESSION_EXPIRE_TIME);
+			return FjnyResult.ok(token);
+		}
+		return FjnyResult.build(500, "登录错误");
+	}
+
+	//获取用户缓存
+	@Override
+	public FjnyResult getUserByToken(String token) {
+		String value = jedisClient.get(USER_TOKEN_KEY+":"+token.toString());
+		System.out.println("value:"+value);
+		if(StringUtils.isBlank(value)) {
+			return FjnyResult.build(500, "账户失效");
+		}
+		TbUser result = JsonUtils.jsonToPoJo(value, TbUser.class);
+		return FjnyResult.ok(result);
+	}
+	
+	//注册
+	@Override
+	public FjnyResult doReg(TbUser tbUser) {
+		
+		String md5Pwd = DigestUtils.md5DigestAsHex(tbUser.getPassword().getBytes());
+		tbUser.setPassword(md5Pwd);
+		record.setPhone(phone);
+		record.setEmail(email);
+		record.setUpdated(new Date());
+		record.setCreated(new Date());
+		int selective = tbUserMapper.insertSelective(record);
+		if(selective > 0) {
+			return FjnyResult.ok();
+		}
+		return FjnyResult.build(500, "用户已存在");
+	}
+	
+	/**
+	 * 修改密码
+	 */
+	@Override
+	public FjnyResult updatePass(Long id ,String password,String oldpass) {
+		TbUserExample example =new TbUserExample();
+		example.createCriteria().andIdEqualTo(id);
+		List<TbUser> list = tbUserMapper.selectByExample(example);
+		TbUser tbuser=list.get(0);
+		String oPass = tbuser.getPassword();
+		System.out.println("数据库拿出来的密码:"+oPass);
+		String md5 =DigestUtils.md5DigestAsHex(oldpass.getBytes());
+		System.out.println("传进来的转化MD5的密码"+md5);
+		if(md5.equals(oPass)) {
+			TbUser tbUser1 =new TbUser();
+			String newpass=DigestUtils.md5DigestAsHex(password.getBytes());
+			System.out.println("准备插入数据库的密码："+newpass);
+			tbUser1.setPassword(newpass);
+			tbUserMapper.updateByExampleSelective(tbUser1, example);
+			return FjnyResult.ok();
+		}
+			return FjnyResult.build(500, "出现错误");
+	}
+
+}
